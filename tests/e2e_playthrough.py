@@ -114,7 +114,13 @@ async def run():
             console_errors, req_fails = [], []
             page.on('console',  lambda m: console_errors.append(m.text) if m.type=='error' else None)
             page.on('pageerror', lambda e: console_errors.append(str(e)))
-            page.on('requestfailed', lambda r: req_fails.append(f"{r.url} -> {r.failure}"))
+            # Ignore ERR_ABORTED on audio — that's our own playPrompt() pausing
+            # an in-flight fetch when the next prompt starts. Cosmetic, not a bug.
+            def on_req_fail(r):
+                if '/audio/' in r.url and 'ABORTED' in (r.failure or ''):
+                    return
+                req_fails.append(f"{r.url} -> {r.failure}")
+            page.on('requestfailed', on_req_fail)
             await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=20000)
             await page.wait_for_timeout(2200)
             summary, n = await play_once(page, click_correct=True)
