@@ -1,0 +1,205 @@
+---
+title: "MOCHI Kids — pilot sanity check"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+params:
+  refresh: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     fig.width = 8, fig.height = 4.5)
+library(tidyverse)
+library(scales)
+library(here)
+
+if (params$refresh) {
+  system2("python3", c(here("analysis", "fetch_data.py")))
+}
+
+sessions <- read_csv(here("analysis", "data", "sessions.csv"),
+                     show_col_types = FALSE)
+trials   <- read_csv(here("analysis", "data", "trials.csv"),
+                     show_col_types = FALSE)
+
+# Treat consent_age as factor with sensible order (kids first, adult last).
+age_order <- c("2","3","4","5","6","7","8","9","10+","adult")
+sessions <- sessions %>% mutate(consent_age = factor(consent_age, levels = age_order))
+trials   <- trials   %>% mutate(consent_age = factor(consent_age, levels = age_order),
+                                tier = factor(tier, levels = c("training","warmup","familiar","novel")))
+
+n_sessions <- nrow(sessions)
+n_trials   <- nrow(trials)
+```
+
+> Set `params: refresh: yes` (or knit with refresh=TRUE) to re-pull from Mongo.
+
+`r if (n_sessions == 0) "**No real sessions in the database yet.** Run a few playthroughs (or wait until pilot data lands) and re-knit.\n"`
+
+```{r empty-guard, eval = (n_sessions == 0), echo = FALSE, results = "asis"}
+knitr::knit_exit()
+```
+
+# Sample
+
+`r n_sessions` sessions, `r n_trials` trials.
+
+```{r}
+sessions %>%
+  count(consent_age, .drop = FALSE) %>%
+  ggplot(aes(consent_age, n)) +
+  geom_col(fill = "#6ec1e4") +
+  labs(x = "self-reported age", y = "sessions",
+       title = "Who's played so far") +
+  theme_minimal()
+```
+
+# Completion
+
+The trial set has 74 trials. A complete session has `n_trials == 74`.
+
+```{r}
+sessions %>%
+  ggplot(aes(n_trials)) +
+  geom_histogram(binwidth = 1, fill = "#ff6f61") +
+  geom_vline(xintercept = 74, linetype = "dashed") +
+  labs(x = "trials completed", y = "sessions",
+       title = "Completion histogram (dashed = full set)") +
+  theme_minimal()
+
+incomplete <- sessions %>% filter(n_trials < 74)
+if (nrow(incomplete) > 0) {
+  cat("Sessions that didn't finish:\n")
+  knitr::kable(incomplete %>% select(participantID, consent_age, n_trials, n_correct))
+}
+```
+
+# Accuracy by tier
+
+Adult baselines from the README: training≈1, warmup≈1, familiar≥0.95, novel≥0.95.
+Chance for 3-AFC is 1/3.
+
+```{r}
+acc_by_tier <- trials %>%
+  group_by(tier) %>%
+  summarise(n = n(), acc = mean(correct, na.rm = TRUE), .groups = "drop")
+
+knitr::kable(acc_by_tier, digits = 3)
+
+trials %>%
+  group_by(participantID, consent_age, tier) %>%
+  summarise(acc = mean(correct, na.rm = TRUE), .groups = "drop") %>%
+  ggplot(aes(tier, acc, color = consent_age)) +
+  geom_hline(yintercept = 1/3, linetype = "dashed", color = "grey50") +
+  geom_jitter(width = 0.15, height = 0, size = 3, alpha = 0.8) +
+  scale_y_continuous(labels = percent_format(), limits = c(0, 1)) +
+  labs(x = NULL, y = "accuracy",
+       title = "Per-participant accuracy by tier",
+       caption = "dashed line = chance (1/3)") +
+  theme_minimal()
+```
+
+# Reaction time
+
+Sanity: kids should mostly land between 500ms and ~10s.
+Floor (button-mash) and ceiling (stuck) flag UI issues.
+
+```{r}
+trials %>%
+  filter(!is.na(rt)) %>%
+  ggplot(aes(tier, rt / 1000, fill = tier)) +
+  geom_violin(alpha = 0.5) +
+  geom_jitter(width = 0.1, height = 0, size = 0.5, alpha = 0.4) +
+  scale_y_continuous(trans = "log10",
+                     breaks = c(0.1, 0.25, 0.5, 1, 2, 5, 10, 30),
+                     labels = c("0.1","0.25","0.5","1","2","5","10","30")) +
+  labs(x = NULL, y = "RT (seconds, log)",
+       title = "RT distribution by tier") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+trials %>%
+  group_by(tier) %>%
+  summarise(median_rt_s = median(rt, na.rm = TRUE) / 1000,
+            p25_rt_s    = quantile(rt, 0.25, na.rm = TRUE) / 1000,
+            p75_rt_s    = quantile(rt, 0.75, na.rm = TRUE) / 1000,
+            n_under_500ms = sum(rt < 500, na.rm = TRUE),
+            n_over_15s    = sum(rt > 15000, na.rm = TRUE),
+            .groups = "drop") %>%
+  knitr::kable(digits = 2)
+```
+
+# Per-trial accuracy
+
+If everyone (or no one) gets a specific trial right, the stimulus may be broken
+or trivially easy. Compare kid accuracy to the adult baseline.
+
+```{r fig.height = 6}
+per_trial <- trials %>%
+  group_by(trial_id, tier, dataset, human_avg_adult) %>%
+  summarise(n = n(), kid_acc = mean(correct, na.rm = TRUE), .groups = "drop")
+
+per_trial %>%
+  ggplot(aes(human_avg_adult, kid_acc, color = tier)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey60") +
+  geom_hline(yintercept = 1/3, linetype = "dotted", color = "grey60") +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_x_continuous(labels = percent_format(), limits = c(0, 1)) +
+  scale_y_continuous(labels = percent_format(), limits = c(0, 1)) +
+  labs(x = "adult accuracy (from manifest)",
+       y = "kid accuracy (this dataset)",
+       title = "Per-trial: kids vs adults",
+       caption = "dashed = identity, dotted = chance") +
+  theme_minimal()
+
+odd <- per_trial %>%
+  filter((n >= 3) & (kid_acc <= 1/3 - 0.05 | kid_acc >= 0.99)) %>%
+  arrange(kid_acc)
+if (nrow(odd) > 0) {
+  cat("Trials worth eyeballing (kids near chance OR everyone correct, n>=3):\n")
+  knitr::kable(odd, digits = 3)
+}
+```
+
+# Position bias
+
+If kids systematically tap left/middle/right regardless of where the oddity is,
+something's off (visual layout, audio cuing, etc.).
+
+```{r}
+trials %>%
+  count(chosen_display_pos) %>%
+  mutate(prop = n / sum(n)) %>%
+  knitr::kable(digits = 3)
+
+trials %>%
+  count(chosen_display_pos, correct) %>%
+  ggplot(aes(factor(chosen_display_pos), n, fill = correct)) +
+  geom_col(position = "fill") +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "display position chosen (0=left, 1=mid, 2=right)",
+       y = "share", title = "Accuracy by chosen position") +
+  theme_minimal()
+```
+
+# Schema sanity
+
+Any rows with missing fields that should be there.
+
+```{r}
+session_missing <- sessions %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "field", values_to = "n_missing") %>%
+  filter(n_missing > 0)
+
+trial_missing <- trials %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "field", values_to = "n_missing") %>%
+  filter(n_missing > 0)
+
+cat("session-level missing:\n"); knitr::kable(session_missing)
+cat("\ntrial-level missing:\n");  knitr::kable(trial_missing)
+```

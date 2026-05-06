@@ -21,6 +21,12 @@ export default defineConfig({
   server: {
     port: 3000,
     open: false,
+    // Forward data routes to the Express server (npm run start on :9000)
+    // so `npm run dev` writes to Mongo with hot reload.
+    proxy: {
+      '/submit': 'http://localhost:9000',
+      '/health': 'http://localhost:9000',
+    },
   },
   preview: {
     port: 4000,

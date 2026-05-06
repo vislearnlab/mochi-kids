@@ -1,4 +1,4 @@
-.PHONY: install dev build serve start prod test test-static test-e2e clean
+.PHONY: install dev build serve start prod test test-static test-e2e sanity clean
 
 install:
 	npm install
@@ -32,6 +32,12 @@ test-static:
 
 test-e2e:
 	python3 tests/e2e_playthrough.py
+
+# Pull data from Mongo and knit the sanity-check Rmd. Opens the HTML on macOS.
+sanity:
+	python3 analysis/fetch_data.py
+	Rscript -e 'rmarkdown::render("analysis/sanity_check.Rmd")'
+	@command -v open >/dev/null 2>&1 && open analysis/sanity_check.html || true
 
 clean:
 	rm -rf dist dist-server node_modules
