@@ -1,0 +1,494 @@
+{
+  "trials": [
+    {
+      "trial_id": "training_00",
+      "tier": "training",
+      "dataset": "training",
+      "condition": "chair_vs_loudspeaker",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/training_00/0.jpg",
+        "stimuli/training_00/1.jpg",
+        "stimuli/training_00/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "training_01",
+      "tier": "training",
+      "dataset": "training",
+      "condition": "chair_vs_loudspeaker",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/training_01/0.jpg",
+        "stimuli/training_01/1.jpg",
+        "stimuli/training_01/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "training_02",
+      "tier": "training",
+      "dataset": "training",
+      "condition": "chair_vs_abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/training_02/0.jpg",
+        "stimuli/training_02/1.jpg",
+        "stimuli/training_02/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "training_03",
+      "tier": "training",
+      "dataset": "training",
+      "condition": "lamp_vs_chair",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/training_03/0.jpg",
+        "stimuli/training_03/1.jpg",
+        "stimuli/training_03/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "training_04",
+      "tier": "training",
+      "dataset": "training",
+      "condition": "lamp_vs_loudspeaker",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/training_04/0.jpg",
+        "stimuli/training_04/1.jpg",
+        "stimuli/training_04/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "training_05",
+      "tier": "training",
+      "dataset": "training",
+      "condition": "lamp_vs_abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/training_05/0.jpg",
+        "stimuli/training_05/1.jpg",
+        "stimuli/training_05/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1357",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet1357/0.jpg",
+        "stimuli/shapenet1357/1.jpg",
+        "stimuli/shapenet1357/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet942",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet942/0.jpg",
+        "stimuli/shapenet942/1.jpg",
+        "stimuli/shapenet942/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1263",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet1263/0.jpg",
+        "stimuli/shapenet1263/1.jpg",
+        "stimuli/shapenet1263/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet431",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "lamp",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet431/0.jpg",
+        "stimuli/shapenet431/1.jpg",
+        "stimuli/shapenet431/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1477",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "lamp",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet1477/0.jpg",
+        "stimuli/shapenet1477/1.jpg",
+        "stimuli/shapenet1477/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1053",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "lamp",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet1053/0.jpg",
+        "stimuli/shapenet1053/1.jpg",
+        "stimuli/shapenet1053/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1147",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "bench",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet1147/0.jpg",
+        "stimuli/shapenet1147/1.jpg",
+        "stimuli/shapenet1147/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet886",
+      "tier": "warmup",
+      "dataset": "shapenet",
+      "condition": "bench",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet886/0.jpg",
+        "stimuli/shapenet886/1.jpg",
+        "stimuli/shapenet886/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1082",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "lamp",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet1082/0.jpg",
+        "stimuli/shapenet1082/1.jpg",
+        "stimuli/shapenet1082/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1392",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "telephone",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet1392/0.jpg",
+        "stimuli/shapenet1392/1.jpg",
+        "stimuli/shapenet1392/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet904",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "loudspeaker",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet904/0.jpg",
+        "stimuli/shapenet904/1.jpg",
+        "stimuli/shapenet904/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet950",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "cabinet",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet950/0.jpg",
+        "stimuli/shapenet950/1.jpg",
+        "stimuli/shapenet950/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1460",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "telephone",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet1460/0.jpg",
+        "stimuli/shapenet1460/1.jpg",
+        "stimuli/shapenet1460/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1413",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "bench",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet1413/0.jpg",
+        "stimuli/shapenet1413/1.jpg",
+        "stimuli/shapenet1413/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet469",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "loudspeaker",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet469/0.jpg",
+        "stimuli/shapenet469/1.jpg",
+        "stimuli/shapenet469/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1451",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "display",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet1451/0.jpg",
+        "stimuli/shapenet1451/1.jpg",
+        "stimuli/shapenet1451/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet697",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet697/0.jpg",
+        "stimuli/shapenet697/1.jpg",
+        "stimuli/shapenet697/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1312",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet1312/0.jpg",
+        "stimuli/shapenet1312/1.jpg",
+        "stimuli/shapenet1312/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet1285",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "cabinet",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet1285/0.jpg",
+        "stimuli/shapenet1285/1.jpg",
+        "stimuli/shapenet1285/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet782",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet782/0.jpg",
+        "stimuli/shapenet782/1.jpg",
+        "stimuli/shapenet782/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapenet708",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "bench",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet708/0.jpg",
+        "stimuli/shapenet708/1.jpg",
+        "stimuli/shapenet708/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen1507",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapegen1507/0.jpg",
+        "stimuli/shapegen1507/1.jpg",
+        "stimuli/shapegen1507/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen1554",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapegen1554/0.jpg",
+        "stimuli/shapegen1554/1.jpg",
+        "stimuli/shapegen1554/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen2205",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapegen2205/0.jpg",
+        "stimuli/shapegen2205/1.jpg",
+        "stimuli/shapegen2205/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen2260",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapegen2260/0.jpg",
+        "stimuli/shapegen2260/1.jpg",
+        "stimuli/shapegen2260/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen2267",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapegen2267/0.jpg",
+        "stimuli/shapegen2267/1.jpg",
+        "stimuli/shapegen2267/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen2132",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapegen2132/0.jpg",
+        "stimuli/shapegen2132/1.jpg",
+        "stimuli/shapegen2132/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen2249",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapegen2249/0.jpg",
+        "stimuli/shapegen2249/1.jpg",
+        "stimuli/shapegen2249/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    },
+    {
+      "trial_id": "shapegen2326",
+      "tier": "novel",
+      "dataset": "shapegen",
+      "condition": "abstract4",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapegen2326/0.jpg",
+        "stimuli/shapegen2326/1.jpg",
+        "stimuli/shapegen2326/2.jpg"
+      ],
+      "human_avg_adult": 1.0
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+Subject: MOCHI shapegen meshes / rotation rendering — child study request
+
+Hi Tyler,
+
+I'm Bria Long (Asst Prof, Psych, UCSD). I run vislearnlab.org. I'm planning a
+developmental follow-up on MOCHI: 4–6-year-olds (online, jsPsych) on a
+curated easy-tail subset, with a within-subjects manipulation comparing
+the original static three-image trials to short rotation animations
+(±45 deg yaw, ~3 s loops) of each card. Hypothesis: animation should
+disproportionately benefit kids on the abstract shapegen items (mental
+rotation immature till adolescence per Erdogan & Jacobs 2017) while
+leaving image-only foundation models largely unaffected — a clean
+human-model dissociation.
+
+Two asks:
+
+1) shapegen meshes / procedural code. The HF dataset and mochi_code repo
+ship the rendered viewpoints but not the underlying 3D shapes, and I'd like
+to render new viewpoints for the abstract trials we're using. Could you
+share the shapegen procedural pipeline (or a one-time render of additional
+viewpoints — say, 13 frames per scene at 7.5 deg steps from -45 to +45 around
+the original viewpoint)? Happy to acknowledge / co-author as appropriate.
+
+2) Rendering parameters. So we can match the static and animated conditions
+visually, would you mind sharing the camera/lighting setup used for the
+shapenet and shapegen renders in MOCHI? I'm planning pyrender + ortho
+camera, two directional lights, but if there's a Blender file or render
+script I can mirror it would save weeks.
+
+We've curated 59 trials (10 warmup, 39 main shapenet, 10 stretch shapegen)
+with adult human_avg >= .80 and kid-friendly conditions. Game prototype is
+running and the static-only version is testable today.
+
+Happy to share the kid-friendly task code, preregistration draft, and target
+timeline if useful.
+
+Thanks!
+Bria

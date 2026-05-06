@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shape Detective — MOCHI Kids</title>
+
+<link href="https://fonts.googleapis.com/css?family=Schoolbell" rel="stylesheet">
+<script src="https://unpkg.com/jspsych@8.0.2"></script>
+<script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.0.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-preload@2.0.0"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/jspsych@8.0.2/css/jspsych.css" />
+<style>
+  :root {
+    --bg: #fff8e1;
+    --accent: #ff6f61;
+    --accent-2: #6ec1e4;
+    --good: #6abf69;
+    --gold: #ffd166;
+    --soft-yellow: #F7E293; /* matches vislearnlab museumkiosk */
+    --text: #2b2b2b;
+  }
+  html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0;
+               font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif; }
+  .jspsych-display-element { font-size: 28px; }
+  .jspsych-content { max-width: 1200px; }
+
+  /* Schoolbell for cute headings (matches her drawing-task aesthetic) */
+  .bell { font-family: "Schoolbell", cursive; }
+
+  .kid-prompt {
+    font-family: "Schoolbell", cursive;
+    font-size: 48px; color: var(--accent); margin: 8px 0 24px; text-align: center;
+  }
+  .kid-prompt .sub { display:block; font-size: 22px; color: #555; margin-top: 6px; font-family: inherit;}
+
+  .kid-row { display: flex; gap: 28px; justify-content: center; align-items: center; flex-wrap: wrap; position: relative;}
+  .kid-card {
+    background: white; border: 6px solid var(--gold); border-radius: 28px;
+    padding: 12px; cursor: pointer; position: relative;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.08);
+  }
+  .kid-card:hover { transform: translateY(-4px) scale(1.03); border-color: var(--accent); box-shadow: 0 10px 0 rgba(0,0,0,0.10); }
+  .kid-card:active { transform: translateY(0) scale(0.98); }
+  .kid-card img { display: block; width: 260px; height: 260px; object-fit: contain; border-radius: 18px; background: #fafafa; }
+  .kid-card.disabled { pointer-events: none; opacity: 0.85; }
+  .kid-card.correct { border-color: var(--good); animation: bounce 0.5s ease; }
+  .kid-card.wrong   { border-color: #d9534f; animation: shake 0.4s ease; }
+  @keyframes bounce { 0%{transform:scale(1)} 35%{transform:scale(1.14)} 65%{transform:scale(0.97)} 100%{transform:scale(1.05)} }
+  @keyframes shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+  .sparkle {
+    position: absolute; pointer-events: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    box-shadow: 0 0 8px 2px rgba(255,215,0,0.85);
+    animation: sparkle-fly 0.9s ease-out forwards;
+  }
+  @keyframes sparkle-fly {
+    0%   { transform: translate(0,0) scale(0.3); opacity: 1; }
+    100% { transform: translate(var(--dx),var(--dy)) scale(1.4); opacity: 0; }
+  }
+
+  .big-btn {
+    font-family: "Schoolbell", cursive;
+    font-size: 36px; padding: 14px 36px; border-radius: 999px;
+    border: none; background: var(--accent); color: white;
+    cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+  }
+  .big-btn:hover { filter: brightness(1.05); }
+  .big-btn.secondary { background: var(--accent-2); }
+  .big-btn.warning  { background: var(--soft-yellow); color: #333; }
+
+  .stars { font-size: 56px; letter-spacing: 6px; }
+
+  .hud {
+    position: fixed; top: 14px; left: 14px; right: 14px;
+    display: flex; gap: 14px; align-items: center;
+    pointer-events: none; z-index: 50;
+  }
+  .hud .progress-bar { flex: 1; height: 16px; background: #ffe7c2; border-radius: 999px; overflow: hidden; }
+  .hud .progress-fill { height: 100%; background: linear-gradient(90deg,#ffd166,#ff6f61); transition: width 0.5s; }
+  .hud .progress-label { font-family: "Schoolbell", cursive; font-size: 22px; color: #993556; min-width: 64px; text-align: center; }
+  .hud .score-pill {
+    background: white; border: 2px solid var(--gold); color: #993556;
+    padding: 4px 14px; border-radius: 999px; font-family: "Schoolbell", cursive; font-size: 22px;
+    pointer-events: auto;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .score-pop { animation: scorepop 0.45s ease; }
+  @keyframes scorepop { 0%{transform:scale(1)} 50%{transform:scale(1.25); color:#6abf69} 100%{transform:scale(1)} }
+
+  /* Zorpie sizes */
+  .zorpie { display: block; margin: 0 auto; image-rendering: -webkit-optimize-contrast; }
+  .zorpie.big { width: 280px; }
+  .zorpie.med { width: 180px; }
+  .zorpie.sm  { width: 120px; }
+
+  /* Demo mini-cards (used in tutorial intro) */
+  .demo-row { display:flex; gap:18px; justify-content:center; align-items:center; margin: 18px 0;}
+  .demo-card { width:120px; height:120px; border:5px solid var(--gold); border-radius:18px; background:white;
+               display:flex; align-items:center; justify-content:center; font-size: 64px;}
+  .demo-card.diff { border-color: var(--good); }
+
+  /* Consent screen */
+  #consent-wrap { max-width: 900px; margin: 0 auto; padding: 28px 24px; text-align: center; }
+  #consent-wrap h1 { font-family: "Schoolbell", cursive; color: var(--accent); font-size: 56px; margin: 0 0 12px; }
+  #consent-wrap .age-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px auto; max-width: 700px;}
+  #consent-wrap .age-btn {
+    font-family: "Schoolbell", cursive; font-size: 32px;
+    padding: 14px 0; border-radius: 14px;
+    border: 2px solid #999; background: white; cursor: pointer;
+  }
+  #consent-wrap .age-btn.selected { background: var(--soft-yellow); border-color: #b08c20; }
+  #consent-wrap .agree-row { font-family: "Schoolbell", cursive; font-size: 28px; margin: 16px 0;
+                             display:flex; align-items:center; justify-content:center; gap:10px; }
+  #consent-wrap .consent-text {
+    text-align: left; max-width: 760px; margin: 18px auto;
+    background: white; border: 2px solid #ddd; border-radius: 14px; padding: 18px;
+    font-size: 13px; line-height: 1.5; color: #333; max-height: 260px; overflow: auto;
+  }
+
+  @media (max-width: 800px) {
+    .kid-card img { width: 180px; height: 180px; }
+    .kid-prompt { font-size: 36px; }
+    .zorpie.big { width: 180px; } .zorpie.med { width: 130px; }
+  }
+</style>
+</head>
+<body>
+<div class="hud" id="hud" style="display:none">
+  <div class="progress-label" id="prog-label">0 / 0</div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="score-pill" id="score-pill"><span>⭐</span><span id="score-val">0</span></div>
+</div>
+
+<!-- Visible loading + error overlay -->
+<div id="boot-overlay" style="position:fixed;inset:0;background:#fff8e1;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="text-align:center;max-width:680px;padding:24px;">
+    <div class="bell" style="font-size:44px;color:#ff6f61">Shape Detective is loading…</div>
+    <div id="boot-msg" style="font-size:18px;color:#666;margin-top:14px">starting up</div>
+    <div id="boot-error" style="display:none;margin-top:18px;padding:14px;background:#fff;border:2px solid #d9534f;border-radius:14px;color:#722;text-align:left;font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;max-height:300px;overflow:auto"></div>
+  </div>
+</div>
+
+<script>
+function _bootSay(msg)  { var e=document.getElementById('boot-msg'); if(e)e.textContent=msg; }
+function _bootFail(msg) {
+  var e=document.getElementById('boot-error');
+  if(!e)return;
+  e.style.display='block';
+  e.textContent = (e.textContent ? e.textContent+'\n\n' : '') + msg;
+}
+function _bootDone() { var ov=document.getElementById('boot-overlay'); if(ov) ov.remove(); }
+window.addEventListener('error', function(e){ _bootFail('JS error: '+(e.message||e.error||e)+'\n'+(e.filename||'')+':'+e.lineno); });
+window.addEventListener('unhandledrejection', function(e){ _bootFail('Promise rejected: '+(e.reason && (e.reason.stack||e.reason.message)||e.reason)); });
+if (location.protocol === 'file:') {
+  _bootFail('Looks like you opened this file directly (file://). The browser blocks fetch() over file://, so the trial manifest can\'t load.\n\nFix: cd into the public/ folder and run\n   python3 -m http.server 8000\nthen open http://localhost:8000');
+}
+</script>
+
+<script>
+// ============ helpers ============
+function getURLParam(name, fallback) {
+  const u = new URL(window.location.href);
+  return u.searchParams.get(name) || fallback;
+}
+function shortId(n=10) {
+  const s = "abcdefghijkmnpqrstuvwxyz23456789";
+  let r = ""; for (let i=0;i<n;i++) r += s.charAt(Math.floor(Math.random()*s.length));
+  return r;
+}
+
+// ============ audio: chime only ============
+let audioCtx = null;
+function ac() {
+  if (!audioCtx) {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    audioCtx = new C();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+  return audioCtx;
+}
+function playChime() {
+  const ctx = ac(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const notes = [523.25, 659.25, 783.99, 1046.50]; // C–E–G–C
+  notes.forEach((freq, i) => {
+    const t0 = now + i * 0.07;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, t0);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(0.18, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + 0.6);
+  });
+}
+
+// ============ visual rewards ============
+function emitSparkles(card, n=14) {
+  const rect = card.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top  + rect.height/2;
+  const colors = ['#ffd166','#ff6f61','#6ec1e4','#6abf69','#c084fc'];
+  for (let i=0;i<n;i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.style.background = colors[Math.floor(Math.random()*colors.length)];
+    s.style.left = (cx - 7) + 'px';
+    s.style.top  = (cy - 7) + 'px';
+    s.style.position = 'fixed';
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 80 + Math.random()*100;
+    s.style.setProperty('--dx', `${Math.cos(angle)*dist}px`);
+    s.style.setProperty('--dy', `${Math.sin(angle)*dist}px`);
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(), 1000);
+  }
+}
+function bumpScore(score) {
+  const el = document.getElementById('score-val');
+  el.textContent = score;
+  el.classList.remove('score-pop'); void el.offsetWidth; el.classList.add('score-pop');
+}
+
+// ============ experiment params ============
+const PARTICIPANT_ID = getURLParam('participantID', null) || ('kid_' + shortId(8));
+const STUDY = getURLParam('study', 'mochi_kids_v1');
+const SUBMIT_URL = getURLParam('submit_url', '/submit');
+// Auto-disable saving on static-host domains (GitHub Pages, Firebase Hosting, etc.)
+// where there's no Express+Mongo server to receive POSTs.
+const STATIC_HOST = /(\.github\.io|\.web\.app|\.firebaseapp\.com|\.netlify\.app|\.vercel\.app)$/i.test(location.hostname);
+const SAVE_ENABLED = getURLParam('save', STATIC_HOST ? 'false' : 'true') !== 'false';
+const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '10'), 10);
+const BREAK_EVERY    = parseInt(getURLParam('break_every', '20'), 10);
+
+// Filled in during the consent screen
+let CONSENT_INFO = { age: null, agreed: false };
+
+let SCORE = 0;
+
+// ============ trial builder ============
+function makeOddityTrial(t, trialNum, totalTrials) {
+  const order = t.images.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+
+  const stimulus = `
+    <div class="kid-prompt">Find the one that's different<span class="sub">Tap the picture that's different.</span></div>
+    <div class="kid-row" id="row-${t.trial_id}">
+      ${order.map((origIdx, displayPos) => `
+        <div class="kid-card" data-orig="${origIdx}" data-pos="${displayPos}">
+          <img src="${t.images[origIdx]}" alt="object ${displayPos+1}" />
+        </div>`).join('')}
+    </div>
+  `;
+
+  return {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus,
+    choices: "NO_KEYS",
+    trial_duration: null,
+    on_load: function() {
+      ac();
+      const hud = document.getElementById('hud'); if (hud) hud.style.display = 'flex';
+      document.getElementById('prog-fill').style.width = `${100*(trialNum)/totalTrials}%`;
+      document.getElementById('prog-label').textContent = `${trialNum+1} / ${totalTrials}`;
+
+      const start = performance.now();
+      const cards = document.querySelectorAll(`#row-${t.trial_id} .kid-card`);
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          const rt = performance.now() - start;
+          const chosenOrig = parseInt(card.getAttribute('data-orig'), 10);
+          const chosenPos  = parseInt(card.getAttribute('data-pos'), 10);
+          const correct    = chosenOrig === t.oddity_index;
+          cards.forEach(c => c.classList.add('disabled'));
+          card.classList.add(correct ? 'correct' : 'wrong');
+
+          if (correct) {
+            playChime();
+            emitSparkles(card, 16);
+            SCORE += 1;
+            bumpScore(SCORE);
+          } else {
+            const rightCard = Array.from(cards).find(c => parseInt(c.getAttribute('data-orig'),10) === t.oddity_index);
+            if (rightCard) setTimeout(() => rightCard.classList.add('correct'), 260);
+          }
+
+          jsPsych.finishTrial({
+            task: 'mochi_oddity',
+            trial_id: t.trial_id,
+            dataset: t.dataset, condition: t.condition, tier: t.tier,
+            n_objects: t.n_objects,
+            oddity_index_orig: t.oddity_index,
+            chosen_orig_index: chosenOrig,
+            chosen_display_pos: chosenPos,
+            display_order: order,
+            correct: correct, rt: rt,
+            human_avg_adult: t.human_avg_adult,
+            score_after: SCORE,
+          });
+        }, { once: true });
+      });
+    },
+    data: { task_block: 'mochi_oddity', trial_id: t.trial_id, condition: t.condition },
+  };
+}
+
+// ============ consent + age screen (in jsPsych as a custom html-button-response) ============
+function consentTrial() {
+  // We render our own UI inside the stimulus and only enable the button
+  // once the kid has selected an age and the parent has checked "you can use my data".
+  const stimulus = `
+    <div id="consent-wrap">
+      <h1>Shape Detective!</h1>
+      <img src="images/zorpie/zorpie_wave.gif" class="zorpie big" alt="Zorpie waves hello" />
+      <p class="bell" style="font-size:32px;color:#444;margin:6px 0 0">Hi! I'm Zorpie!</p>
+
+      <p class="bell" style="font-size:30px;margin:18px 0 8px">HOW OLD ARE YOU?</p>
+      <div class="age-grid" id="age-grid">
+        ${[2,3,4,5,6,7,8,9,'10+','adult'].map(a => `
+          <button class="age-btn" data-age="${a}">${a}</button>
+        `).join('')}
+      </div>
+
+      <p class="agree-row">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input id="agree-cb" type="checkbox" style="width:24px;height:24px" />
+          <span>YOU CAN USE MY DATA</span>
+        </label>
+      </p>
+
+      <details class="consent-text">
+        <summary class="bell" style="cursor:pointer;font-size:18px;color:#666">Consent details (for parents/guardians)</summary>
+        <p style="margin-top:12px">
+          By proceeding, you and your child agree to participate in this research. Your child
+          will be asked to play a short shape-matching game on this tablet/computer. No
+          audio/video recording will occur and no identifying information will be collected.
+          Your child's participation will take approximately 3–8 minutes, depending on their pace.
+          The game data collected here will be used for research purposes by the
+          UCSD Visual Learning Lab. There are no risks or benefits to participating: no
+          identifying information will be collected, so you and your child's identity will
+          remain anonymous. Your child can stop the game at any time or choose not to answer
+          any question without penalty. For more information, email the UCSD lab at
+          <i>vislearnlab@ucsd.edu</i>. If you are not satisfied with how this study is being
+          conducted, or if you have any concerns, complaints, or general questions about the
+          research or your rights as a participant, please contact the UCSD Human Research
+          Protections Program at (858) 246-4777.
+          <br/><br/>
+          <i>(Adapted from the Stanford CDM museum-kiosk consent.
+          Update IRB # / lab contact before deployment.)</i>
+        </p>
+      </details>
+
+      <p style="font-size:15px;color:#777;margin-top:8px">Pick your age and check the box to continue.</p>
+    </div>
+  `;
+  return {
+    type: jsPsychHtmlButtonResponse,
+    stimulus,
+    choices: ["LET'S PLAY!"],
+    button_html: (c) => `<button class="big-btn" id="consent-go" disabled style="opacity:0.45;cursor:not-allowed">${c}</button>`,
+    on_load: function() {
+      ac();
+      const grid = document.getElementById('age-grid');
+      const cb = document.getElementById('agree-cb');
+      const refresh = () => {
+        const go = document.getElementById('consent-go');
+        if (!go) return;
+        const ok = CONSENT_INFO.age && cb.checked;
+        go.disabled = !ok;
+        go.style.opacity = ok ? '1' : '0.45';
+        go.style.cursor  = ok ? 'pointer' : 'not-allowed';
+      };
+      grid.querySelectorAll('.age-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          grid.querySelectorAll('.age-btn').forEach(x => x.classList.remove('selected'));
+          b.classList.add('selected');
+          CONSENT_INFO.age = b.getAttribute('data-age');
+          refresh();
+        });
+      });
+      cb.addEventListener('change', () => {
+        CONSENT_INFO.agreed = cb.checked;
+        refresh();
+      });
+    },
+    data: { task: 'consent' },
+    on_finish: function(data) {
+      data.consent_age = CONSENT_INFO.age;
+      data.consent_agreed = CONSENT_INFO.agreed;
+    },
+  };
+}
+
+// ============ jsPsych init ============
+const jsPsych = initJsPsych({
+  show_progress_bar: false,
+  on_finish: async function() {
+    const all = jsPsych.data.get().values();
+    const oddity = all.filter(d => d.task === 'mochi_oddity');
+    const summary = {
+      participantID: PARTICIPANT_ID, study: STUDY,
+      consent: CONSENT_INFO,
+      finishedAt: new Date().toISOString(),
+      n_trials: oddity.length,
+      n_correct: oddity.filter(d => d.correct).length,
+      mean_rt: oddity.length ? oddity.reduce((a,d)=>a+d.rt,0)/oddity.length : null,
+      trials: oddity,
+      ua: navigator.userAgent,
+      screen: { w: screen.width, h: screen.height, dpr: window.devicePixelRatio },
+    };
+
+    if (SAVE_ENABLED) {
+      try {
+        await fetch(SUBMIT_URL, {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ participantID: PARTICIPANT_ID, data: summary }),
+          keepalive: true,
+        });
+      } catch (e) { console.warn('save failed:', e); }
+    }
+
+    const acc = summary.n_trials ? summary.n_correct/summary.n_trials : 0;
+    const stars = "⭐".repeat(Math.max(1, Math.round(acc*5)));
+    document.body.innerHTML = `
+      <div style="text-align:center; padding: 40px 24px;">
+        <img src="images/zorpie/zorpie_stars.gif" class="zorpie big" alt="Zorpie celebrates" />
+        <div class="bell" style="font-size: 64px; color:#ff6f61;">All done!</div>
+        <div class="stars" style="margin: 18px 0;">${stars}</div>
+        <div style="font-size:28px; color:#444;">You got <b>${summary.n_correct}</b> out of <b>${summary.n_trials}</b> right!</div>
+        <div style="margin-top:18px; font-size:16px; color:#888;">Participant: ${PARTICIPANT_ID}</div>
+        <button class="big-btn warning" id="dl" style="margin-top:24px;">Download my data</button>
+      </div>`;
+    document.getElementById('dl').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(summary, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${PARTICIPANT_ID}.json`;
+      a.click();
+    });
+    setTimeout(playChime, 100); setTimeout(playChime, 400); setTimeout(playChime, 700);
+  }
+});
+
+async function main() {
+  _bootSay('loading trial manifest…');
+  let manifest;
+  try {
+    const r = await fetch('manifest.json');
+    if (!r.ok) throw new Error('manifest.json HTTP ' + r.status);
+    manifest = await r.json();
+  } catch (err) {
+    _bootFail('Could not load manifest.json: ' + err);
+    throw err;
+  }
+  const trials = manifest.trials;
+  const allImages = trials.flatMap(t => t.images);
+  _bootSay(`found ${trials.length} trials — preloading…`);
+  setTimeout(_bootDone, 300);
+
+  const timeline = [];
+
+  timeline.push({
+    type: jsPsychPreload,
+    images: [
+      ...allImages,
+      'images/zorpie/zorpie_wave.gif',
+      'images/zorpie/zorpie_happy.gif',
+      'images/zorpie/zorpie_stars.gif',
+      'images/zorpie/zorpie_confused.gif',
+    ],
+    message: '<div style="text-align:center"><div class="bell" style="font-size:40px;color:#ff6f61">Loading the game…</div><div style="font-size:22px;color:#555">Get ready to find shapes!</div></div>',
+    show_progress_bar: true,
+  });
+
+  // 1. Consent + age picker (Zorpie waves)
+  timeline.push(consentTrial());
+
+  // 2. Tutorial / how-to-play (Zorpie happy)
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align:center; padding: 0 24px;">
+        <img src="images/zorpie/zorpie_happy.gif" class="zorpie med" alt="" />
+        <div class="bell" style="font-size:46px;color:#ff6f61;margin:6px 0 14px">How to play</div>
+        <div style="font-size:28px; max-width:760px; margin: 0 auto 12px;">
+          Two pictures are the <b>same</b>. One is <b>different</b>.<br/>
+          Find the <b>different</b> one!
+        </div>
+        <div class="demo-row">
+          <div class="demo-card">🐶</div>
+          <div class="demo-card">🐶</div>
+          <div class="demo-card diff">🐱</div>
+        </div>
+        <div style="font-size:22px;color:#666;max-width:600px;margin: 0 auto;">
+          Two are the same (🐶 🐶), one is different (🐱) — you'd tap the cat!
+        </div>
+      </div>`,
+    choices: ["I'm ready!"],
+    button_html: (c) => `<button class="big-btn">${c}</button>`,
+  });
+
+  trials.forEach((t, i) => {
+    timeline.push(makeOddityTrial(t, i, trials.length));
+
+    const completed = i + 1;
+    const isLast = completed === trials.length;
+    const isBreak = !isLast && BREAK_EVERY > 0 && completed % BREAK_EVERY === 0;
+    const isReminderOnly = !isLast && !isBreak && REMINDER_EVERY > 0 && completed % REMINDER_EVERY === 0;
+
+    if (isBreak) {
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div style="text-align:center;">
+            <img src="images/zorpie/zorpie_happy.gif" class="zorpie big" alt="" />
+            <div class="bell" style="font-size:42px;color:#6ec1e4;margin-top:8px">Take a little break!</div>
+            <div style="font-size:22px;color:#666;margin-top:8px">Stretch, wiggle, or take a sip 💧</div>
+          </div>`,
+        choices: ["I'm ready!"],
+        button_html: (c) => `<button class="big-btn">${c}</button>`,
+      });
+    } else if (isReminderOnly) {
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div style="text-align:center;">
+            <img src="images/zorpie/zorpie_confused.gif" class="zorpie med" alt="" />
+            <div class="bell" style="font-size:36px;color:#993556;margin-top:6px">Remember!</div>
+            <div style="font-size:22px;color:#666;margin-top:6px;max-width:560px;margin-left:auto;margin-right:auto">
+              Two are the same. One is different. Tap the different one!
+            </div>
+          </div>`,
+        choices: ["Keep going!"],
+        button_html: (c) => `<button class="big-btn secondary">${c}</button>`,
+      });
+    }
+  });
+
+  jsPsych.run(timeline);
+}
+
+main();
+</script>
+</body>
+</html>
