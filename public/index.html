@@ -256,21 +256,55 @@ function bumpScore(score) {
 // ============ experiment params ============
 const PARTICIPANT_ID = getURLParam('participantID', null) || ('kid_' + shortId(8));
 const STUDY = getURLParam('study', 'mochi_kids_v1');
-// Default endpoint for trial-data POSTs. Override per-session with
-// `?submit_url=https://...` in the URL.
+// Save infrastructure — mirrors the lab canonical pattern from
+// vislearnlab/vediSurveyDatapipe. Two options:
 //
-// For production deployment: replace this with the lab's
-// /submit endpoint (an Express+MongoDB server, see server/server.js
-// or a similar lab service running the same `Insert(data, participantID,
-// 'participantID')` pattern). The client always attempts a POST; failures
-// are caught and (optionally) shown as a fallback download.
-const DEFAULT_SUBMIT_URL = 'https://vislearnlab-mochi.onrender.com/submit';
-const SUBMIT_URL = getURLParam('submit_url', DEFAULT_SUBMIT_URL);
-const SAVE_ENABLED = getURLParam('save', 'true') !== 'false';
-// `?show_download=true` reveals a fallback "Download my data" button on
-// the thank-you screen (handy during development; the kid version doesn't
-// see it).
-const SHOW_DOWNLOAD = getURLParam('show_download', 'false') === 'true';
+//   PRIMARY:  jsPsych DataPipe (pipe.jspsych.org) — a free, OSF-backed
+//             service that lets a static GH-Pages site save data without
+//             running its own server. Set DATAPIPE_EXPERIMENT_ID to your
+//             study's id (create one at https://pipe.jspsych.org).
+//
+//   FALLBACK: a lab Express + MongoDB endpoint (see server/server.js).
+//             Override per-session with `?submit_url=https://...`.
+//
+// At runtime we try DataPipe first if an experiment id is configured;
+// otherwise we POST to SUBMIT_URL. On failure either way, the thank-you
+// page shows a download fallback so pilot data isn't lost.
+const DATAPIPE_EXPERIMENT_ID = getURLParam('experiment_id', '');     // <-- set this for production
+const DATAPIPE_URL           = 'https://pipe.jspsych.org/api/data/';
+const DEFAULT_SUBMIT_URL     = 'https://vislearnlab-mochi.onrender.com/submit';
+const SUBMIT_URL             = getURLParam('submit_url', DEFAULT_SUBMIT_URL);
+const SAVE_ENABLED           = getURLParam('save', 'true') !== 'false';
+// `?show_download=true` reveals a fallback "Download my data" button
+// on the thank-you screen (dev mode; the kid path doesn't see it).
+const SHOW_DOWNLOAD          = getURLParam('show_download', 'false') === 'true';
+
+async function saveToDataPipe(participantID, summary) {
+  const r = await fetch(DATAPIPE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      experimentID: DATAPIPE_EXPERIMENT_ID,
+      filename: `${participantID}.json`,
+      data: JSON.stringify(summary),
+    }),
+    keepalive: true,
+  });
+  if (!r.ok) throw new Error(`DataPipe HTTP ${r.status}`);
+  return r;
+}
+
+async function saveToLabServer(participantID, summary) {
+  const r = await fetch(SUBMIT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ participantID, data: summary }),
+    keepalive: true,
+    mode: 'cors',
+  });
+  if (!r.ok) throw new Error(`lab-server HTTP ${r.status}`);
+  return r;
+}
 const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '10'), 10);
 const BREAK_EVERY    = parseInt(getURLParam('break_every', '20'), 10);
 
@@ -493,22 +527,16 @@ const jsPsych = initJsPsych({
 
     if (SAVE_ENABLED) {
       try {
-        const r = await fetch(SUBMIT_URL, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ participantID: PARTICIPANT_ID, data: summary }),
-          keepalive: true,
-          mode: 'cors',
-        });
-        if (r.ok) {
-          const status = document.getElementById('save-status');
-          if (status) status.textContent = '✓ answers saved';
+        if (DATAPIPE_EXPERIMENT_ID) {
+          await saveToDataPipe(PARTICIPANT_ID, summary);
         } else {
-          showDownloadFallback(`HTTP ${r.status}`);
+          await saveToLabServer(PARTICIPANT_ID, summary);
         }
+        const status = document.getElementById('save-status');
+        if (status) status.textContent = '✓ answers saved';
       } catch (e) {
         console.warn('save failed:', e);
-        showDownloadFallback('network error');
+        showDownloadFallback(String(e.message || e).slice(0, 60));
       }
     } else {
       const status = document.getElementById('save-status');
