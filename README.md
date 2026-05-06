@@ -27,8 +27,9 @@ Or double-click `start.command` from Finder on macOS.
 mochi-kids/
 ├── public/                    # the static site GH Pages serves   → public/README.md
 │   ├── index.html             # single-file jsPsych v8 experiment
-│   ├── manifest.json          # 35 curated trials
+│   ├── manifest.json          # 74 curated trials
 │   ├── stimuli/<trial>/0..2.jpg
+│   ├── audio/                 # 3 gTTS prompts (welcome / how_to_play / reminder)
 │   └── images/zorpie/         # mascot GIFs (from vislearnlab/museumkiosk)
 ├── server/                    # optional Express + MongoDB save layer  → server/README.md
 ├── rendering/                 # rotation-animation pipeline (planned)  → rendering/README.md
@@ -40,32 +41,54 @@ mochi-kids/
 └── push_to_vislearnlab.command  # one-click: gh repo create + push + enable Pages
 ```
 
-## Trial set (35 trials, two datasets)
+## Trial set (74 trials, two datasets)
 
 | tier | n | dataset | filter | adult acc |
 | --- | --- | --- | --- | --- |
 | training | 6 | synthesized | same image × 2 + 1 different image (pop-out) | trivial |
-| warmup | 8 | shapenet | chair, lamp, bench; adjacent viewpoints; RT < 2.5s | 1.0 |
-| familiar | 13 | shapenet | broader real-object set | 1.0 |
-| novel | 8 | shapegen | abstract4 (easiest abstract shape bin) | 1.0 |
+| warmup | 12 | shapenet | chair, lamp, bench; adjacent viewpoints; RT < 2.5s | 1.0 |
+| familiar | 32 | shapenet | chair, bench, loudspeaker, cabinet, lamp, watercraft, telephone, display | ≥ 0.95 |
+| novel | 24 | shapegen | abstract4 + abstract3 + abstract2 (3 difficulty bins) | ≥ 0.95 |
 
-All MOCHI trials filtered to `human_avg = 1.0` *and* `RT < 2500 ms` so
-kids see only trials that adults nailed quickly. No `majaj` (HVM /
-Yamins-lab images) and no `barense` (faces).
+`majaj` (HVM / Yamins-lab images) and `barense` (faces) explicitly
+excluded. Adjacent-viewpoint constraint preserved on shapenet trials so
+the rotation between matching cards stays small. See
+[`public/stimuli/README.md`](public/stimuli/README.md) for the full
+curate logic.
 
-See [`public/stimuli/README.md`](public/stimuli/README.md) for the
-full curate logic.
+## Audio + reward design
 
-## Reward design (intentionally minimal)
+Spoken voice fires at three structured moments only — never per-trial,
+so the soundscape stays calm:
 
-- **No spoken voice anywhere.** First-pass voice prompts via gTTS were
-  too robotic; we removed them. On-screen text is sized for a parent to
-  read aloud if the kid can't read yet.
-- **Reward audio = chime only.** A C-major arpeggio synthesized live
-  via Web Audio API on every correct answer. No sound on wrong (no
-  harsh buzzer). 16-particle multi-color sparkle burst from the correct
-  card. Score pill in the HUD pops when it ticks up. 5-star end screen
-  scaled to accuracy.
+| when | what plays |
+| --- | --- |
+| Consent screen | `welcome.mp3` |
+| How-to-play | `how_to_play.mp3` |
+| Every 10 trials (`?reminder_every=N`) | `reminder.mp3` |
+
+Reward audio = **chime only**. A C-major arpeggio synthesized live via
+Web Audio API on every correct answer. No sound on wrong (no harsh
+buzzer). 16-particle multicolor sparkle burst from the correct card.
+HUD score pill ticks up with a small pop animation. End screen shows
+Zorpie + a count of correct answers (no star rating).
+
+The voice files were generated with gTTS — they're functional but
+robotic. Drop in real recordings at the same filenames in
+`public/audio/` to upgrade with no code changes.
+
+## URL parameters
+
+| param | default | what it does |
+| --- | --- | --- |
+| `participantID` | random `kid_xxxxxxxx` | Prolific / SONA / lab ID |
+| `study` | `mochi_kids_v1` | Study tag stored with the record |
+| `save` | `true` (auto-`false` on `*.github.io`/`*.web.app`/etc.) | Set to `false` to skip POST |
+| `submit_url` | `/submit` | Override server endpoint |
+| `reminder_every` | `10` | Trials between spoken reminders |
+| `break_every` | `20` | Trials between break screens |
+
+Example: `https://vislearnlab.github.io/mochi-kids/?participantID=pilot01`
 
 ## Data shape
 
@@ -76,9 +99,12 @@ Each completed session POSTs (or the kid downloads) one JSON document:
   "participantID": "kid_xxxx",
   "study": "mochi_kids_v1",
   "consent": { "age": "6", "agreed": true },
-  "n_trials": 35, "n_correct": 28, "mean_rt": 3145.2,
+  "n_trials": 74, "n_correct": 58, "mean_rt": 3145.2,
   "trials": [{ "task": "mochi_oddity", "trial_id": "shapenet1234",
-               "tier": "familiar", "correct": true, "rt": 2810.4, ... }]
+               "tier": "familiar", "condition": "chair",
+               "correct": true, "rt": 2810.4,
+               "oddity_index_orig": 1, "chosen_orig_index": 1,
+               "display_order": [2, 0, 1], ... }]
 }
 ```
 
@@ -94,7 +120,7 @@ CI runs the full suite on every push to `main`. Three layers:
 1. **Static** — JS syntax (`node --check`), Python compile, manifest
    schema + image existence checks
 2. **End-to-end** — Playwright drives a real headless Chromium through
-   the entire experiment (consent, all 35 trials, breaks, reminders,
+   the entire experiment (consent, all 74 trials, breaks, reminders,
    end screen) and asserts no console errors, all RTs captured,
    double-clicks ignored
 3. **Server** *(optional, planned)* — supertest against `/submit` with
@@ -113,19 +139,26 @@ Full strategy: [TESTING.md](TESTING.md).
   [`server/README.md`](server/README.md).
 
 The static client auto-disables `/submit` POSTs on `*.github.io`,
-`*.web.app`, and similar hosts.
+`*.web.app`, and similar hosts so it works offline / read-only on Pages.
 
 ## Roadmap
 
 - [x] Static play-through w/ jsPsych v8, kid-friendly UX
-- [x] Curated 35-trial easy-tail set
-- [x] Consent + age picker
-- [x] CI + automated tests
-- [ ] Rotation-animation manipulation (waiting on ShapeNet GLB access
-      and shapegen meshes from Bonnen — see
+- [x] Curated 74-trial easy-tail set (familiar real objects + novel
+      abstract shapes)
+- [x] Consent + age picker, scoped audio (welcome, how-to-play, every
+      10-trial reminder)
+- [x] CI + automated tests, GH Pages deploy
+- [ ] Real pilot — N≈30 kids per age (4, 5, 6) + matched adult sample
+- [ ] Rotation-animation manipulation (within-subjects ±45° yaw on a
+      random half of trials — waiting on ShapeNet GLB access and
+      shapegen meshes from Bonnen; see
       [`rendering/README.md`](rendering/README.md))
-- [ ] Real pilot with N≈30 kids per age
-- [ ] Pre-registration of the human-model dissociation hypothesis
+- [ ] Pre-registration of the human-model crossover hypothesis (kids
+      beat models on familiar real objects, models beat kids on novel
+      abstracts — see `docs/simulated_results.png` for the predicted
+      pattern)
+- [ ] Replace gTTS prompts with a real recorded voice
 
 ## Citation
 
@@ -143,5 +176,5 @@ arXiv:2409.05862.
 
 Mascot art (Zorpie) from
 [brialorelle/museumkiosk](https://github.com/brialorelle/museumkiosk).
-Stimuli from MOCHI on Hugging Face. Schoolbell font from Google Fonts.
-jsPsych v8.
+Stimuli from [tzler/MOCHI](https://huggingface.co/datasets/tzler/MOCHI)
+on Hugging Face. Schoolbell font from Google Fonts. jsPsych v8.
