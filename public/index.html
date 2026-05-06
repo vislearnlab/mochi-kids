@@ -73,8 +73,6 @@
   .big-btn.secondary { background: var(--accent-2); }
   .big-btn.warning  { background: var(--soft-yellow); color: #333; }
 
-  .stars { font-size: 56px; letter-spacing: 6px; }
-
   .hud {
     position: fixed; top: 14px; left: 14px; right: 14px;
     display: flex; gap: 14px; align-items: center;
@@ -87,7 +85,6 @@
     background: white; border: 2px solid var(--gold); color: #993556;
     padding: 4px 14px; border-radius: 999px; font-family: "Schoolbell", cursive; font-size: 22px;
     pointer-events: auto;
-    display: flex; gap: 6px; align-items: center;
   }
   .score-pop { animation: scorepop 0.45s ease; }
   @keyframes scorepop { 0%{transform:scale(1)} 50%{transform:scale(1.25); color:#6abf69} 100%{transform:scale(1)} }
@@ -133,7 +130,7 @@
 <div class="hud" id="hud" style="display:none">
   <div class="progress-label" id="prog-label">0 / 0</div>
   <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
-  <div class="score-pill" id="score-pill"><span>⭐</span><span id="score-val">0</span></div>
+  <div class="score-pill" id="score-pill"><span id="score-val">0</span></div>
 </div>
 
 <!-- Visible loading + error overlay -->
@@ -173,7 +170,34 @@ function shortId(n=10) {
   return r;
 }
 
-// ============ audio: chime only ============
+// ============ audio ============
+//
+// Two layers:
+//   - Spoken instructions (gTTS pre-recorded mp3s) at three structured
+//     moments: welcome, how-to-play, and every-10-trial reminder. NEVER
+//     per-trial — keeps the soundscape calm.
+//   - Reward chime (Web Audio synthesized C-major arpeggio) on correct
+//     responses. No sound on wrong.
+const AUDIO_BASE = 'audio';
+const audioCache = {};
+function loadAudio(name) {
+  if (audioCache[name]) return audioCache[name];
+  const a = new Audio(`${AUDIO_BASE}/${name}.mp3`);
+  a.preload = 'auto';
+  audioCache[name] = a;
+  return a;
+}
+let lastPrompt = null;
+function playPrompt(name) {
+  if (lastPrompt && !lastPrompt.paused) {
+    try { lastPrompt.pause(); lastPrompt.currentTime = 0; } catch(_) {}
+  }
+  const a = loadAudio(name).cloneNode(true);
+  a.play().catch(()=>{});
+  lastPrompt = a;
+  return a;
+}
+
 let audioCtx = null;
 function ac() {
   if (!audioCtx) {
@@ -371,6 +395,7 @@ function consentTrial() {
     button_html: (c) => `<button class="big-btn" id="consent-go" disabled style="opacity:0.45;cursor:not-allowed">${c}</button>`,
     on_load: function() {
       ac();
+      playPrompt('welcome');
       const grid = document.getElementById('age-grid');
       const cb = document.getElementById('agree-cb');
       const refresh = () => {
@@ -430,14 +455,11 @@ const jsPsych = initJsPsych({
       } catch (e) { console.warn('save failed:', e); }
     }
 
-    const acc = summary.n_trials ? summary.n_correct/summary.n_trials : 0;
-    const stars = "⭐".repeat(Math.max(1, Math.round(acc*5)));
     document.body.innerHTML = `
       <div style="text-align:center; padding: 40px 24px;">
         <img src="images/zorpie/zorpie_stars.gif" class="zorpie big" alt="Zorpie celebrates" />
         <div class="bell" style="font-size: 64px; color:#ff6f61;">All done!</div>
-        <div class="stars" style="margin: 18px 0;">${stars}</div>
-        <div style="font-size:28px; color:#444;">You got <b>${summary.n_correct}</b> out of <b>${summary.n_trials}</b> right!</div>
+        <div style="font-size:28px; color:#444; margin-top: 18px;">You got <b>${summary.n_correct}</b> out of <b>${summary.n_trials}</b> right!</div>
         <div style="margin-top:18px; font-size:16px; color:#888;">Participant: ${PARTICIPANT_ID}</div>
         <button class="big-btn warning" id="dl" style="margin-top:24px;">Download my data</button>
       </div>`;
@@ -479,6 +501,7 @@ async function main() {
       'images/zorpie/zorpie_stars.gif',
       'images/zorpie/zorpie_confused.gif',
     ],
+    audio: ['welcome','how_to_play','reminder'].map(n => `${AUDIO_BASE}/${n}.mp3`),
     message: '<div style="text-align:center"><div class="bell" style="font-size:40px;color:#ff6f61">Loading the game…</div><div style="font-size:22px;color:#555">Get ready to find shapes!</div></div>',
     show_progress_bar: true,
   });
@@ -508,6 +531,7 @@ async function main() {
       </div>`,
     choices: ["I'm ready!"],
     button_html: (c) => `<button class="big-btn">${c}</button>`,
+    on_load: () => playPrompt('how_to_play'),
   });
 
   trials.forEach((t, i) => {
@@ -543,6 +567,7 @@ async function main() {
           </div>`,
         choices: ["Keep going!"],
         button_html: (c) => `<button class="big-btn secondary">${c}</button>`,
+        on_load: () => playPrompt('reminder'),
       });
     }
   });
