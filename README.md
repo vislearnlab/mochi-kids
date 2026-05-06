@@ -1,185 +1,136 @@
 # MOCHI Kids — Shape Detective
 
-A kid-friendly (4–6 year olds) adaptation of the MOCHI 3D-shape oddity task
-(Bonnen et al., NeurIPS 2024). Three-image trials: two views of the same
-object, one different — tap the odd one out.
+A kid-friendly (4–6 year olds) adaptation of the MOCHI 3D-shape oddity
+benchmark (Bonnen et al., NeurIPS 2024 D&B). Three-image trials: two
+views of the same object, one different — tap the odd one out.
+
+Live demo: **https://vislearnlab.github.io/mochi-kids/**
+
+[![tests](https://github.com/vislearnlab/mochi-kids/actions/workflows/test.yml/badge.svg)](https://github.com/vislearnlab/mochi-kids/actions/workflows/test.yml)
+[![pages](https://github.com/vislearnlab/mochi-kids/actions/workflows/pages.yml/badge.svg)](https://github.com/vislearnlab/mochi-kids/actions/workflows/pages.yml)
+
+## Quick start
+
+```bash
+# play it locally
+make serve                  # or: cd public && python3 -m http.server 8000
+
+# run all tests
+make test
+```
+
+Or double-click `start.command` from Finder on macOS.
 
 ## What's here
 
 ```
 mochi-kids/
-├── public/
-│   ├── index.html          # jsPsych v8 game (single-page, CDN-loaded)
-│   ├── manifest.json       # 30 curated trials w/ metadata
-│   └── stimuli/<trial>/0.jpg, 1.jpg, 2.jpg
-├── server/
-│   ├── server.js           # Express + MongoDB; mirrors hybrid-drawing-rating /submit
-│   ├── package.json
-│   └── .env.example
-└── README.md
+├── public/                    # the static site GH Pages serves   → public/README.md
+│   ├── index.html             # single-file jsPsych v8 experiment
+│   ├── manifest.json          # 35 curated trials
+│   ├── stimuli/<trial>/0..2.jpg
+│   └── images/zorpie/         # mascot GIFs (from vislearnlab/museumkiosk)
+├── server/                    # optional Express + MongoDB save layer  → server/README.md
+├── rendering/                 # rotation-animation pipeline (planned)  → rendering/README.md
+├── tests/                     # asset-integrity + Playwright e2e       → tests/README.md
+├── docs/                      # research artifacts (figures, sims)     → docs/README.md
+├── .github/workflows/         # CI (test) + GH Pages (pages)           → .github/README.md
+├── TESTING.md                 # full testing strategy
+├── start.command              # double-click → serves locally + opens browser
+└── push_to_vislearnlab.command  # one-click: gh repo create + push + enable Pages
 ```
 
-## Trial set (59 trials, 15 conditions)
+## Trial set (35 trials, two datasets)
 
-Curated from MOCHI's 2,019 trials by adult `human_avg` and kid-friendliness:
+| tier | n | dataset | filter | adult acc |
+| --- | --- | --- | --- | --- |
+| training | 6 | synthesized | same image × 2 + 1 different image (pop-out) | trivial |
+| warmup | 8 | shapenet | chair, lamp, bench; adjacent viewpoints; RT < 2.5s | 1.0 |
+| familiar | 13 | shapenet | broader real-object set | 1.0 |
+| novel | 8 | shapegen | abstract4 (easiest abstract shape bin) | 1.0 |
 
-| Tier | Count | Conditions | Adult acc. floor |
-| --- | --- | --- | --- |
-| warmup | 10 | animals, chairs, lamp, chair | ≥ 0.95 |
-| main | 39 | chair, bench, lamp, table, sofa, watercraft, cabinet, telephone, display, loudspeaker, animals, chairs | ≥ 0.80 |
-| stretch | 10 | abstract4, abstract3, abstract2 (easier shapegen) | ≥ 0.90 |
+All MOCHI trials filtered to `human_avg = 1.0` *and* `RT < 2500 ms` so
+kids see only trials that adults nailed quickly. No `majaj` (HVM /
+Yamins-lab images) and no `barense` (faces).
 
-Order in `manifest.json`: warmup first, then main (shuffled), then stretch
-(shuffled). Re-curate by re-running the python in the curate section below.
-A wiggle break is inserted every 12 trials.
+See [`public/stimuli/README.md`](public/stimuli/README.md) for the
+full curate logic.
 
-All trials are 3-image (3AFC) so the layout stays consistent for kids.
+## Reward design (intentionally minimal)
 
-## Audio (slim by design)
+- **No spoken voice anywhere.** First-pass voice prompts via gTTS were
+  too robotic; we removed them. On-screen text is sized for a parent to
+  read aloud if the kid can't read yet.
+- **Reward audio = chime only.** A C-major arpeggio synthesized live
+  via Web Audio API on every correct answer. No sound on wrong (no
+  harsh buzzer). 16-particle multi-color sparkle burst from the correct
+  card. Score pill in the HUD pops when it ticks up. 5-star end screen
+  scaled to accuracy.
 
-Spoken voice fires only at structured moments — never per-trial — so the
-soundscape doesn't feel chatty:
+## Data shape
 
-| When | What plays |
-| --- | --- |
-| Welcome | `welcome.mp3` (Beep introduces himself) |
-| How-to-play | `how_to_play.mp3` |
-| Every 10 trials (`?reminder_every=N`) | `reminder.mp3` ("Remember, two are the same…") |
-| Every 20 trials (`?break_every=N`) | `break_time.mp3` / `break_water.mp3` (alternates) |
-| End | `all_done.mp3` |
-
-Reward audio = **chime only**. A C-major arpeggio (Web Audio API,
-synthesized live, zero files) plays on every correct response. Wrong
-responses get visual feedback only — a gentle shake and the right answer
-briefly highlighted — no sound, no harsh buzzer.
-
-Pre-rendered prompts live in `public/audio/`, generated with Google TTS
-(en-us). Extra `praise_*` and `gentle_*` mp3s are kept on disk so you can
-swap them back in later if you want per-trial verbal feedback.
-
-## Mascot — meet Beep
-
-A friendly waving robot (`public/images/robot_wave.gif`, generated with
-PIL) shows up on every screen with words on it:
-- Welcome + how-to-play (large)
-- Every reminder (medium)
-- Every break (large)
-- End screen (large)
-
-He doesn't appear during trials so kids stay focused on the stimuli.
-
-## Visual rewards (per trial)
-
-- Card border bounce on correct, shake on wrong
-- 16-particle multicolor sparkle burst from the correct card
-- Score pill in the top-right HUD pops when it ticks up
-- 5-star end screen scaled to accuracy
-
-## Run it locally
-
-### Quick preview (no server)
-
-```bash
-cd mochi-kids/public
-python3 -m http.server 8000
-# open http://localhost:8000?save=false
-```
-
-`?save=false` skips the POST to `/submit` — useful for the static preview.
-At the end of the session there's a "Download my data" button that saves the
-session JSON locally.
-
-### Full run (with MongoDB save)
-
-```bash
-cd mochi-kids/server
-cp .env.example .env       # edit MONGO_URL etc.
-npm install
-npm start
-# open http://localhost:8080
-```
-
-The server serves `../public` statically and exposes `POST /submit`.
-
-## URL parameters (client)
-
-| Param | Default | Purpose |
-| --- | --- | --- |
-| `participantID` | random `kid_xxxxxxxx` | Prolific / SONA / lab ID. Same key the server upserts on. |
-| `study` | `mochi_kids_v1` | Study tag stored with the record. |
-| `consent` | `true` | Set to `false` to flag a no-consent / preview run. |
-| `save` | `true` | Set to `false` to skip the network save (works fully offline). |
-| `submit_url` | `/submit` | Override if hosting client and server on different origins. |
-
-## Data shape (POSTed to `/submit`)
+Each completed session POSTs (or the kid downloads) one JSON document:
 
 ```json
 {
-  "participantID": "kid_abcd1234",
-  "data": {
-    "participantID": "kid_abcd1234",
-    "study": "mochi_kids_v1",
-    "consent": true,
-    "finishedAt": "2026-05-05T18:32:12.345Z",
-    "n_trials": 30,
-    "n_correct": 26,
-    "mean_rt": 3145.2,
-    "trials": [
-      {
-        "task": "mochi_oddity",
-        "trial_id": "hvm90",
-        "dataset": "majaj",
-        "condition": "animals",
-        "tier": "warmup",
-        "n_objects": 3,
-        "oddity_index_orig": 1,
-        "chosen_orig_index": 1,
-        "chosen_display_pos": 2,
-        "display_order": [2, 0, 1],
-        "correct": true,
-        "rt": 2810.4,
-        "human_avg_adult": 1.0
-      }
-    ],
-    "ua": "...",
-    "screen": { "w": 1440, "h": 900, "dpr": 2 }
-  }
+  "participantID": "kid_xxxx",
+  "study": "mochi_kids_v1",
+  "consent": { "age": "6", "agreed": true },
+  "n_trials": 35, "n_correct": 28, "mean_rt": 3145.2,
+  "trials": [{ "task": "mochi_oddity", "trial_id": "shapenet1234",
+               "tier": "familiar", "correct": true, "rt": 2810.4, ... }]
 }
 ```
 
-The server upserts on `participantID` (matches the lab's
-`Insert(data, participantID, 'participantID')` convention), so re-submits
-overwrite cleanly.
+When running via GitHub Pages (no server), the user gets a
+"Download my data" button on the end screen. When running with the
+Express server (`cd server && npm start`), the same payload is
+upserted to MongoDB on `participantID`.
 
-## Audio prompts
+## Testing
 
-Uses the Web Speech API for kid-friendly TTS. No audio files to manage. If
-you want pre-recorded prompts later, drop MP3s in `public/audio/` and replace
-the `speak(...)` calls in `index.html`.
+CI runs the full suite on every push to `main`. Three layers:
 
-Browsers vary in voice quality. On macOS Safari/Chrome you'll get "Samantha"
-or similar — fine for testing. For deployment to schools, pre-recorded audio
-is more reliable across devices.
+1. **Static** — JS syntax (`node --check`), Python compile, manifest
+   schema + image existence checks
+2. **End-to-end** — Playwright drives a real headless Chromium through
+   the entire experiment (consent, all 35 trials, breaks, reminders,
+   end screen) and asserts no console errors, all RTs captured,
+   double-clicks ignored
+3. **Server** *(optional, planned)* — supertest against `/submit` with
+   in-memory MongoDB
 
-## Re-curating trials
+Locally: `make test` or `bash tests/run_all.sh`.
 
-The trials in `manifest.json` are a curated subset of MOCHI. To pick a
-different set:
+Full strategy: [TESTING.md](TESTING.md).
 
-```bash
-# Download MOCHI from Hugging Face (~365 MB)
-pip install huggingface_hub datasets pyarrow pillow
-python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='tzler/MOCHI', repo_type='dataset', local_dir='./MOCHI')"
-```
+## Deploying
 
-Then run a script like the one in `scripts/curate.py` (in the repo's git
-history) — it reads the parquet, filters by `condition` and `human_avg`,
-extracts the PNG stimuli into `public/stimuli/<trial_id>/`, resizes to 512px,
-and writes `public/manifest.json`.
+- **GitHub Pages** (no server) — `git push` to `main`. The
+  `pages.yml` workflow publishes `public/` automatically. Live URL:
+  `https://vislearnlab.github.io/mochi-kids/`.
+- **Lab server** (with MongoDB save) — see
+  [`server/README.md`](server/README.md).
+
+The static client auto-disables `/submit` POSTs on `*.github.io`,
+`*.web.app`, and similar hosts.
+
+## Roadmap
+
+- [x] Static play-through w/ jsPsych v8, kid-friendly UX
+- [x] Curated 35-trial easy-tail set
+- [x] Consent + age picker
+- [x] CI + automated tests
+- [ ] Rotation-animation manipulation (waiting on ShapeNet GLB access
+      and shapegen meshes from Bonnen — see
+      [`rendering/README.md`](rendering/README.md))
+- [ ] Real pilot with N≈30 kids per age
+- [ ] Pre-registration of the human-model dissociation hypothesis
 
 ## Citation
 
-If you publish results from this game, cite the MOCHI benchmark:
+If you publish work using this code or stimuli, please cite the MOCHI
+benchmark:
 
 ```
 Bonnen, T., Fu, S., Bai, Y., O'Connell, T., Friedman, Y., Kanwisher, N.,
@@ -187,3 +138,10 @@ Tenenbaum, J. B., & Efros, A. A. (2024). Evaluating Multiview Object
 Consistency in Humans and Image Models. NeurIPS Datasets & Benchmarks.
 arXiv:2409.05862.
 ```
+
+## Acknowledgments
+
+Mascot art (Zorpie) from
+[brialorelle/museumkiosk](https://github.com/brialorelle/museumkiosk).
+Stimuli from MOCHI on Hugging Face. Schoolbell font from Google Fonts.
+jsPsych v8.
