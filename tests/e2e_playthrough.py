@@ -15,7 +15,9 @@ from contextlib import contextmanager
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
-PUBLIC = PROJECT / 'public'
+# E2E runs against the Vite-built site (PROJECT/dist), not the public/
+# source folder. run_all.sh runs `vite build` before invoking this.
+DIST = PROJECT / 'dist'
 
 def free_port():
     s = socket.socket()
@@ -26,8 +28,10 @@ def free_port():
 
 @contextmanager
 def server(port):
+    if not DIST.exists():
+        raise SystemExit(f"dist/ not found at {DIST}. Run `npx vite build` first (run_all.sh does this automatically).")
     proc = subprocess.Popen(['python3', '-m', 'http.server', str(port)],
-                             cwd=str(PUBLIC),
+                             cwd=str(DIST),
                              stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL,
                              preexec_fn=os.setsid)

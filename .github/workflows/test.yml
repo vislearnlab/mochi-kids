@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Node deps
+        run: npm install
+
       - name: Install Python deps
         run: pip install playwright pillow pyarrow pandas
 

@@ -4,22 +4,19 @@
 set -e
 cd "$(dirname "$0")/.."
 
-echo "=== Layer 1: static checks ==="
-echo "--> JS syntax (extracts inline <script> from index.html and node --check)"
-python3 - <<'PY'
-import re, subprocess, tempfile, sys
-html = open('public/index.html').read()
-scripts = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
-js = '\n'.join(scripts)
-with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False) as f:
-    f.write(js); p = f.name
-r = subprocess.run(['node','--check', p])
-sys.exit(r.returncode)
-PY
+echo "=== Layer 0: install + build ==="
+echo "--> npm install (silent)"
+npm install --silent
 echo "    OK"
 
-echo "--> Server JS syntax"
-node --check server/server.js
+echo "--> Vite build"
+npx vite build > /tmp/vite_build.log 2>&1
+echo "    OK ($(grep '✓ built in' /tmp/vite_build.log | tail -1 || echo 'built'))"
+
+echo
+echo "=== Layer 1: static checks ==="
+echo "--> TypeScript compile (server + experiment)"
+npx tsc --noEmit
 echo "    OK"
 
 echo "--> Python compile (rendering + tests)"

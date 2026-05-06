@@ -12,6 +12,9 @@ import json, os, sys, re
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
+# Vite's `publicDir` is `public/` and contents are copied to `dist/` at
+# build time. Static-data checks (manifest, stimuli, mascot images) run
+# against `public/`, which is the source of truth.
 PUBLIC = PROJECT / 'public'
 
 REQUIRED_TRIAL_FIELDS = {'trial_id', 'tier', 'dataset', 'condition',
@@ -97,18 +100,23 @@ def check_images_loadable(trials):
     if bad == 0: ok("all images loadable")
 
 def check_html_assets():
-    print("==> assets referenced from index.html")
-    html = (PUBLIC / 'index.html').read_text()
-    refs = set(re.findall(r'images/[\w/]+\.(?:gif|png|jpg|jpeg|svg)', html))
-    refs |= set(re.findall(r"audio/[\w/]+\.mp3", html))
+    print("==> assets referenced from src/survey/experiment.ts")
+    src = (PROJECT / 'src' / 'survey' / 'experiment.ts').read_text()
+    refs = set(re.findall(r'images/[\w/]+\.(?:gif|png|jpg|jpeg|svg)', src))
+    refs |= set(re.findall(r"audio/[\w/]+\.mp3", src))
+    # also check the root index.html for any direct references
+    if (PROJECT / 'index.html').exists():
+        h = (PROJECT / 'index.html').read_text()
+        refs |= set(re.findall(r'images/[\w/]+\.(?:gif|png|jpg|jpeg|svg)', h))
+        refs |= set(re.findall(r"audio/[\w/]+\.mp3", h))
     miss = []
     for r in refs:
         if not (PUBLIC / r).exists():
             miss.append(r)
     if miss:
-        for m in miss: fail(f"index.html references missing file: {m}")
+        for m in miss: fail(f"experiment references missing file: {m}")
     else:
-        ok(f"all {len(refs)} html-referenced assets present")
+        ok(f"all {len(refs)} experiment-referenced assets present")
 
 def main():
     m = check_manifest()
