@@ -1,0 +1,171 @@
+"""
+Full end-to-end play-through against the static site.
+
+Boots the site with `python -m http.server` on a random free port,
+drives it with Playwright (headless Chromium), and exits non-zero
+on any console error, failed request, or data shape problem.
+
+Run locally:
+    pip install playwright
+    python -m playwright install chromium
+    python tests/e2e_playthrough.py
+"""
+import asyncio, json, os, signal, socket, subprocess, sys, time
+from contextlib import contextmanager
+from pathlib import Path
+
+PROJECT = Path(__file__).resolve().parent.parent
+PUBLIC = PROJECT / 'public'
+
+def free_port():
+    s = socket.socket()
+    s.bind(('', 0))
+    p = s.getsockname()[1]
+    s.close()
+    return p
+
+@contextmanager
+def server(port):
+    proc = subprocess.Popen(['python3', '-m', 'http.server', str(port)],
+                             cwd=str(PUBLIC),
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL,
+                             preexec_fn=os.setsid)
+    time.sleep(0.6)
+    try:
+        yield
+    finally:
+        try: os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        except Exception: pass
+
+async def play_once(page, click_correct=True):
+    """Walk the experiment, returning the final summary data."""
+    manifest = await page.evaluate(
+        "(async () => (await (await fetch('manifest.json')).json()).trials)()")
+
+    # consent
+    await page.click('button.age-btn[data-age="6"]')
+    await page.click('#agree-cb')
+    await page.click('#consent-go')
+    await page.wait_for_timeout(250)
+    # how-to-play
+    await page.click('button.big-btn')
+    await page.wait_for_timeout(300)
+
+    for trial in manifest:
+        await page.wait_for_timeout(60)
+        # advance reminder/break screens automatically
+        if not await page.evaluate("!!document.querySelector('.kid-row .kid-card')"):
+            await page.click('button.big-btn')
+            await page.wait_for_timeout(120)
+
+        oid = trial['oddity_index']
+        target = oid if click_correct else (oid + 1) % trial['n_objects']
+        await page.evaluate(f"""
+          () => {{
+            const cards = document.querySelectorAll('.kid-row .kid-card');
+            for (const c of cards) {{
+              if (parseInt(c.getAttribute('data-orig'), 10) === {target}) {{
+                c.click(); return;
+              }}
+            }}
+          }}
+        """)
+        await page.wait_for_timeout(100)
+
+    await page.wait_for_timeout(800)
+    summary = await page.evaluate("""
+      () => {
+        const all = jsPsych.data.get().values().filter(d => d.task === 'mochi_oddity');
+        return {
+          n_trials: all.length,
+          n_correct: all.filter(d => d.correct).length,
+          first_rt: all[0] ? all[0].rt : null,
+          all_have_rt: all.every(d => typeof d.rt === 'number' && d.rt > 0),
+          all_have_trial_id: all.every(d => d.trial_id),
+        };
+      }
+    """)
+    return summary, len(manifest)
+
+async def run():
+    from playwright.async_api import async_playwright
+    port = free_port()
+    failures = []
+    with server(port):
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+
+            # === Test 1: disabled consent button blocks advancing ===
+            page = await browser.new_page()
+            await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=15000)
+            await page.wait_for_timeout(1800)
+            await page.evaluate("() => document.getElementById('consent-go')?.click()")
+            await page.wait_for_timeout(300)
+            still_consent = await page.evaluate("document.body.innerText.includes('HOW OLD ARE YOU')")
+            if not still_consent:
+                failures.append("disabled LET'S PLAY button still advanced the experiment")
+            else:
+                print("ok    disabled button blocks advance")
+            await page.close()
+
+            # === Test 2: full all-correct play-through ===
+            page = await browser.new_page()
+            console_errors, req_fails = [], []
+            page.on('console',  lambda m: console_errors.append(m.text) if m.type=='error' else None)
+            page.on('pageerror', lambda e: console_errors.append(str(e)))
+            page.on('requestfailed', lambda r: req_fails.append(f"{r.url} -> {r.failure}"))
+            await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=20000)
+            await page.wait_for_timeout(2200)
+            summary, n = await play_once(page, click_correct=True)
+            if summary['n_trials'] != n:
+                failures.append(f"play-through: only {summary['n_trials']}/{n} trials completed")
+            elif summary['n_correct'] != n:
+                failures.append(f"play-through: {summary['n_correct']}/{n} correct (expected all)")
+            elif not summary['all_have_rt']:
+                failures.append("play-through: some trials missing RT")
+            elif not summary['all_have_trial_id']:
+                failures.append("play-through: some trials missing trial_id")
+            else:
+                print(f"ok    full play-through: {summary['n_correct']}/{summary['n_trials']} correct")
+            if console_errors: failures.append(f"console errors: {console_errors[:5]}")
+            if req_fails:      failures.append(f"failed requests: {req_fails[:5]}")
+            await page.close()
+
+            # === Test 3: rapid double-click respected once-only ===
+            page = await browser.new_page()
+            await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=15000)
+            await page.wait_for_timeout(2000)
+            await page.click('button.age-btn[data-age="6"]')
+            await page.click('#agree-cb')
+            await page.click('#consent-go')
+            await page.wait_for_timeout(250)
+            await page.click('button.big-btn')
+            await page.wait_for_timeout(350)
+            # Double-click any non-oddity card
+            await page.evaluate("""
+              () => {
+                const cards = document.querySelectorAll('.kid-row .kid-card');
+                cards[0].click(); cards[0].click();
+              }
+            """)
+            await page.wait_for_timeout(500)
+            n_done = await page.evaluate(
+                "jsPsych.data.get().values().filter(d=>d.task==='mochi_oddity').length")
+            if n_done != 1:
+                failures.append(f"double-click yielded {n_done} trials, expected 1")
+            else:
+                print("ok    once-only listener: double-click yielded 1 trial")
+            await page.close()
+
+            await browser.close()
+
+    print()
+    if failures:
+        print("FAILED:")
+        for f in failures: print(f"  - {f}")
+        sys.exit(1)
+    print("PASSED — all e2e checks green")
+
+if __name__ == '__main__':
+    asyncio.run(run())
