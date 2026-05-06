@@ -1,14 +1,14 @@
 # public/stimuli/
 
-35 curated trials, each in its own folder. Every trial is a 3-image
+74 curated trials, each in its own folder. Every trial is a 3-image
 oddity (3AFC): two viewpoints of the same object + one different
 object's viewpoint.
 
 ```
 stimuli/
 ├── training_00/0.jpg, 1.jpg, 2.jpg     # 6 same-image pop-out trials
-├── shapenet1234/0.jpg, 1.jpg, 2.jpg     # 21 familiar-object trials (chair, lamp, bench, …)
-└── shapegen2486/0.jpg, 1.jpg, 2.jpg     # 8 novel abstract-shape trials (shapegen abstract4)
+├── shapenet1234/0.jpg, 1.jpg, 2.jpg     # 44 familiar-object trials (chair, lamp, bench, …)
+└── shapegen2486/0.jpg, 1.jpg, 2.jpg     # 24 novel abstract-shape trials (shapegen abstract2/3/4)
 ```
 
 ## How these were curated
@@ -18,11 +18,12 @@ Filter applied:
 
 - `dataset` ∈ {shapenet, shapegen} — drops `majaj` (HVM/Yamins) and `barense` (faces)
 - `n_objects == 3` — keeps the 3AFC layout consistent for kids
-- `human_avg == 1.0` — adults nailed every trial we kept
-- `RT_avg < 2500ms` — adults responded fast (visually obvious)
+- For warmup tier: `human_avg == 1.0` AND `RT_avg < 2500ms`
+- For familiar/novel tiers: `human_avg ≥ 0.95` AND `RT_avg < 3000ms`
 - For shapenet: matching-pair viewpoints are *adjacent* (smaller
   rotation between them)
-- For shapegen: only `abstract4` (the easiest similarity bin)
+- For shapegen: abstract4 (easiest), abstract3 (next), and a small
+  abstract2 stretch — abstract0/1 excluded as too hard
 
 Within those filters, sampled by condition with hard caps so no single
 category dominates.
@@ -32,9 +33,9 @@ category dominates.
 | tier | n | what | source |
 | --- | --- | --- | --- |
 | training | 6 | same image duplicated × 2 + a different image | synthesized at curate time |
-| warmup | 8 | super-easy real objects (chair, lamp, bench) | shapenet |
-| familiar | 13 | broader familiar set (cabinet, display, sofa, telephone, etc.) | shapenet |
-| novel | 8 | novel abstract 3D shapes | shapegen abstract4 |
+| warmup | 12 | super-easy real objects (chair, lamp, bench) at acc=1.0 | shapenet |
+| familiar | 32 | broader familiar set (chair, bench, loudspeaker, cabinet, lamp, watercraft, telephone, display) | shapenet |
+| novel | 24 | novel abstract 3D shapes | shapegen abstract4/3/2 |
 
 Order in the manifest: training → warmup → familiar (shuffled) →
 novel (shuffled). Reminders interleaved every 10, breaks every 20.
@@ -43,7 +44,7 @@ novel (shuffled). Reminders interleaved every 10, breaks every 20.
 
 512px max dimension JPEGs at quality 88. Original MOCHI renders are
 1000×1000 PNGs; we downsample on curation to keep page-load and Pages
-deploy size manageable. ~2.5 MB total for all 105 images.
+deploy size manageable. ~5 MB total for all 222 images.
 
 ## Re-curating
 
