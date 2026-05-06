@@ -256,11 +256,21 @@ function bumpScore(score) {
 // ============ experiment params ============
 const PARTICIPANT_ID = getURLParam('participantID', null) || ('kid_' + shortId(8));
 const STUDY = getURLParam('study', 'mochi_kids_v1');
-const SUBMIT_URL = getURLParam('submit_url', '/submit');
-// Auto-disable saving on static-host domains (GitHub Pages, Firebase Hosting, etc.)
-// where there's no Express+Mongo server to receive POSTs.
-const STATIC_HOST = /(\.github\.io|\.web\.app|\.firebaseapp\.com|\.netlify\.app|\.vercel\.app)$/i.test(location.hostname);
-const SAVE_ENABLED = getURLParam('save', STATIC_HOST ? 'false' : 'true') !== 'false';
+// Default endpoint for trial-data POSTs. Override per-session with
+// `?submit_url=https://...` in the URL.
+//
+// For production deployment: replace this with the lab's
+// /submit endpoint (an Express+MongoDB server, see server/server.js
+// or a similar lab service running the same `Insert(data, participantID,
+// 'participantID')` pattern). The client always attempts a POST; failures
+// are caught and (optionally) shown as a fallback download.
+const DEFAULT_SUBMIT_URL = 'https://vislearnlab-mochi.onrender.com/submit';
+const SUBMIT_URL = getURLParam('submit_url', DEFAULT_SUBMIT_URL);
+const SAVE_ENABLED = getURLParam('save', 'true') !== 'false';
+// `?show_download=true` reveals a fallback "Download my data" button on
+// the thank-you screen (handy during development; the kid version doesn't
+// see it).
+const SHOW_DOWNLOAD = getURLParam('show_download', 'false') === 'true';
 const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '10'), 10);
 const BREAK_EVERY    = parseInt(getURLParam('break_every', '20'), 10);
 
@@ -445,32 +455,68 @@ const jsPsych = initJsPsych({
       screen: { w: screen.width, h: screen.height, dpr: window.devicePixelRatio },
     };
 
-    if (SAVE_ENABLED) {
-      try {
-        await fetch(SUBMIT_URL, {
-          method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ participantID: PARTICIPANT_ID, data: summary }),
-          keepalive: true,
-        });
-      } catch (e) { console.warn('save failed:', e); }
+    // Render the thank-you page immediately. We attempt the POST in the
+    // background; the parent/child don't have to wait for the network.
+    document.body.innerHTML = `
+      <div style="text-align:center; padding: 40px 24px; max-width: 760px; margin: 0 auto;">
+        <img src="images/zorpie/zorpie_stars.gif" class="zorpie big" alt="Zorpie celebrates" />
+        <div class="bell" style="font-size: 64px; color:#ff6f61;">Thank you!</div>
+        <div style="font-size:28px; color:#444; margin-top: 18px;">
+          Great job playing the shape game!
+        </div>
+        <div style="font-size:22px; color:#666; margin-top: 18px;">
+          You can close this window now.
+        </div>
+        <div id="save-status" style="margin-top:24px; font-size:15px; color:#888;">saving your answers…</div>
+        <div id="dl-fallback" style="margin-top:18px; display:none;">
+          <button class="big-btn warning" id="dl">Download my data</button>
+          <div style="font-size:13px;color:#999;margin-top:6px">(in case the server is down)</div>
+        </div>
+      </div>`;
+
+    setTimeout(playChime, 100); setTimeout(playChime, 400); setTimeout(playChime, 700);
+
+    function showDownloadFallback(reason) {
+      const status = document.getElementById('save-status');
+      if (status) status.textContent = `couldn't reach the lab server (${reason}). You can save your answers below.`;
+      const dl = document.getElementById('dl-fallback');
+      if (dl) dl.style.display = 'block';
+      const btn = document.getElementById('dl');
+      if (btn) btn.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(summary, null, 2)], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${PARTICIPANT_ID}.json`;
+        a.click();
+      });
     }
 
-    document.body.innerHTML = `
-      <div style="text-align:center; padding: 40px 24px;">
-        <img src="images/zorpie/zorpie_stars.gif" class="zorpie big" alt="Zorpie celebrates" />
-        <div class="bell" style="font-size: 64px; color:#ff6f61;">All done!</div>
-        <div style="font-size:28px; color:#444; margin-top: 18px;">You got <b>${summary.n_correct}</b> out of <b>${summary.n_trials}</b> right!</div>
-        <div style="margin-top:18px; font-size:16px; color:#888;">Participant: ${PARTICIPANT_ID}</div>
-        <button class="big-btn warning" id="dl" style="margin-top:24px;">Download my data</button>
-      </div>`;
-    document.getElementById('dl').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(summary, null, 2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${PARTICIPANT_ID}.json`;
-      a.click();
-    });
-    setTimeout(playChime, 100); setTimeout(playChime, 400); setTimeout(playChime, 700);
+    if (SAVE_ENABLED) {
+      try {
+        const r = await fetch(SUBMIT_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ participantID: PARTICIPANT_ID, data: summary }),
+          keepalive: true,
+          mode: 'cors',
+        });
+        if (r.ok) {
+          const status = document.getElementById('save-status');
+          if (status) status.textContent = '✓ answers saved';
+        } else {
+          showDownloadFallback(`HTTP ${r.status}`);
+        }
+      } catch (e) {
+        console.warn('save failed:', e);
+        showDownloadFallback('network error');
+      }
+    } else {
+      const status = document.getElementById('save-status');
+      if (status) status.textContent = '(saving disabled via ?save=false)';
+      if (SHOW_DOWNLOAD) showDownloadFallback('save disabled');
+    }
+
+    if (SHOW_DOWNLOAD) showDownloadFallback('dev mode');
   }
 });
 
