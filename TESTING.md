@@ -72,7 +72,9 @@ cd tests && npm install && npm test
 
 ## Continuous integration
 
-`.github/workflows/test.yml` runs on every push and PR to `main`:
+The repo has two workflows under `.github/workflows/`:
+
+**`test.yml`** — runs on every push and PR to `main`:
 
 1. Checkout
 2. Set up Node 20 + Python 3.11
@@ -80,5 +82,14 @@ cd tests && npm install && npm test
 4. Run `bash tests/run_all.sh`
 5. Fail the workflow on any error
 
-A green check on PRs is required before merging — see branch protection
-in repo settings.
+**`pages.yml`** — builds and deploys the static site to GitHub Pages on
+every push to `main`. Uploads `public/` as the artifact and runs
+`actions/deploy-pages@v4`. After the first run, the site lives at
+`https://vislearnlab.github.io/mochi-kids/`.
+
+### Recommended branch protection (set in repo Settings → Branches)
+
+- Require PR before merging to `main`
+- Require status checks to pass (`test` from `test.yml`)
+- Require branches to be up-to-date before merging
+- (Optional) Require linear history
