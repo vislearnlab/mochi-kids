@@ -95,8 +95,69 @@ TRIAL_COLS = [
     "chosen_orig_index", "chosen_display_pos", "correct", "rt",
     "human_avg_adult", "score_after",
 ]
-pd.DataFrame(session_rows, columns=SESSION_COLS).to_csv(OUT / "sessions.csv", index=False)
-pd.DataFrame(trial_rows, columns=TRIAL_COLS).to_csv(OUT / "trials.csv", index=False)
+
+# ============ QA: session-level flags for bad-actor filtering ============
+# Thresholds (lenient to avoid false-flagging real kids).
+POSITION_SHARE_MAX = 0.60      # >60% on one position = position-spam
+FAST_MS = 500                  # button-mash threshold
+STUCK_MS = 15000               # disengaged threshold
+MASH_RATE_MAX = 0.20           # >20% fast trials = mashing
+TRAINING_MIN_ACC = 1.00        # pop-out training trials must all be correct
+ACC_MIN = 0.40                 # overall acc must beat this (chance = 1/3)
+RUN_LEN_MAX = 8                # longest streak of same-position picks tolerated
+
+trials_df = pd.DataFrame(trial_rows, columns=TRIAL_COLS)
+sessions_df = pd.DataFrame(session_rows, columns=SESSION_COLS)
+
+
+def _max_run_length(seq):
+    best = cur = 1
+    prev = None
+    for x in seq:
+        if x == prev:
+            cur += 1
+            best = max(best, cur)
+        else:
+            cur = 1
+        prev = x
+    return best if seq else 0
+
+
+qa_rows = []
+for pid, g in trials_df.groupby("participantID"):
+    n = len(g)
+    pos_counts = g["chosen_display_pos"].value_counts(normalize=True)
+    max_share = pos_counts.max() if len(pos_counts) else 0.0
+    n_fast = int((g["rt"] < FAST_MS).sum())
+    n_stuck = int((g["rt"] > STUCK_MS).sum())
+    train = g[g["tier"] == "training"]
+    train_acc = train["correct"].mean() if len(train) else 1.0
+    overall_acc = g["correct"].mean() if n else 0.0
+    run_len = _max_run_length(list(g.sort_values("trial_index")["chosen_display_pos"]))
+    flags = {
+        "qa_position_spam": max_share > POSITION_SHARE_MAX,
+        "qa_mash":          (n / max(n, 1)) and (n_fast / max(n, 1) > MASH_RATE_MAX),
+        "qa_pop_out_fail":  train_acc < TRAINING_MIN_ACC,
+        "qa_low_acc":       overall_acc < ACC_MIN,
+        "qa_long_run":      run_len > RUN_LEN_MAX,
+    }
+    qa_rows.append({
+        "participantID": pid,
+        "max_position_share": round(max_share, 3),
+        "max_run_length": run_len,
+        "n_fast_lt_500ms": n_fast,
+        "n_stuck_gt_15s": n_stuck,
+        "training_acc": round(train_acc, 3),
+        "overall_acc": round(overall_acc, 3),
+        **{k: bool(v) for k, v in flags.items()},
+        "qa_pass": not any(flags.values()),
+    })
+
+qa_df = pd.DataFrame(qa_rows)
+sessions_df = sessions_df.merge(qa_df, on="participantID", how="left")
+
+sessions_df.to_csv(OUT / "sessions.csv", index=False)
+trials_df.to_csv(OUT / "trials.csv", index=False)
 print(f"wrote {OUT}/sessions.csv ({len(session_rows)} rows)")
 print(f"wrote {OUT}/trials.csv ({len(trial_rows)} rows)")
 client.close()

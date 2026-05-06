@@ -7,6 +7,7 @@ output:
     code_folding: hide
 params:
   refresh: false
+  qa_filter: true
 ---
 
 ```{r setup, include=FALSE}
@@ -31,15 +32,45 @@ sessions <- sessions %>% mutate(consent_age = factor(consent_age, levels = age_o
 trials   <- trials   %>% mutate(consent_age = factor(consent_age, levels = age_order),
                                 tier = factor(tier, levels = c("training","warmup","familiar","novel")))
 
+n_sessions_total <- nrow(sessions)
+n_trials_total   <- nrow(trials)
+```
+
+> Set `params: refresh: yes` to re-pull from Mongo. Set `params: qa_filter: no` to include flagged sessions.
+
+`r if (n_sessions_total == 0) "**No real sessions in the database yet.** Run a few playthroughs (or wait until pilot data lands) and re-knit.\n"`
+
+```{r empty-guard, eval = (n_sessions_total == 0), echo = FALSE, results = "asis"}
+knitr::knit_exit()
+```
+
+# QA flags
+
+```{r}
+qa_summary <- sessions %>%
+  select(participantID, consent_age, n_trials, overall_acc, training_acc,
+         max_position_share, max_run_length, n_fast_lt_500ms, n_stuck_gt_15s,
+         starts_with("qa_"))
+knitr::kable(qa_summary, caption = "Session-level QA. qa_pass = no flags raised.")
+
+flagged <- sessions %>% filter(!qa_pass)
+cat(sprintf("\n%d/%d sessions flagged.\n", nrow(flagged), nrow(sessions)))
+```
+
+```{r filter-bad-actors, echo = FALSE}
+if (isTRUE(params$qa_filter)) {
+  good_pids <- sessions %>% filter(qa_pass) %>% pull(participantID)
+  sessions <- sessions %>% filter(participantID %in% good_pids)
+  trials   <- trials   %>% filter(participantID %in% good_pids)
+}
 n_sessions <- nrow(sessions)
 n_trials   <- nrow(trials)
 ```
 
-> Set `params: refresh: yes` (or knit with refresh=TRUE) to re-pull from Mongo.
+`r if (params$qa_filter) sprintf("Filtering to qa_pass sessions: **%d kept**, %d removed.\n", n_sessions, n_sessions_total - n_sessions) else "QA filter is OFF — all sessions included.\n"`
 
-`r if (n_sessions == 0) "**No real sessions in the database yet.** Run a few playthroughs (or wait until pilot data lands) and re-knit.\n"`
-
-```{r empty-guard, eval = (n_sessions == 0), echo = FALSE, results = "asis"}
+```{r post-filter-empty, eval = (n_sessions == 0), echo = FALSE, results = "asis"}
+cat("\n**No sessions left after QA filtering.** Knit with `params=list(qa_filter=FALSE)` to see flagged sessions.\n")
 knitr::knit_exit()
 ```
 

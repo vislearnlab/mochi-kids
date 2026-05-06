@@ -273,9 +273,6 @@ function consentTrial(): any {
           conducted, or if you have any concerns, complaints, or general questions about the
           research or your rights as a participant, please contact the UCSD Human Research
           Protections Program at (858) 246-4777.
-          <br/><br/>
-          <i>(Adapted from the Stanford CDM museum-kiosk consent.
-          Update IRB # / lab contact before deployment.)</i>
         </p>
       </details>
 
