@@ -213,17 +213,19 @@ def main():
     for _, row in novel_picks.iterrows():
         emit_trial(row, "novel", str(row["trial"]), manifest)
 
-    # Sort manifest in playback order:
-    # training → warmup → familiar (shuffled w/ animals + photos) → novel (shuffled).
+    # Keep each tier as its own block (internal shuffle only). The client
+    # groups by tier at runtime and randomizes the post-warmup block order,
+    # so canonical curate-time order doesn't matter beyond within-block.
     by_tier = {"training": [], "warmup": [], "familiar": [],
                "animals": [], "photos": [], "novel": []}
     for t in manifest:
         by_tier[t["tier"]].append(t)
     rng = random.Random(42)
-    middle = by_tier["familiar"] + by_tier["animals"] + by_tier["photos"]
-    rng.shuffle(middle)
-    rng.shuffle(by_tier["novel"])
-    final = (by_tier["training"] + by_tier["warmup"] + middle + by_tier["novel"])
+    for k in ["familiar", "animals", "photos", "novel"]:
+        rng.shuffle(by_tier[k])
+    final = (by_tier["training"] + by_tier["warmup"]
+             + by_tier["familiar"] + by_tier["animals"]
+             + by_tier["photos"] + by_tier["novel"])
 
     out = {"trials": final}
     MANIFEST_PATH.write_text(json.dumps(out, indent=2))

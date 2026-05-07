@@ -147,7 +147,9 @@ const SAVE_ENABLED: boolean = getURLParam('save', 'true') !== 'false';
 const SHOW_DOWNLOAD: boolean = getURLParam('show_download', 'false') === 'true';
 
 const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '10') as string, 10);
-const BREAK_EVERY    = parseInt(getURLParam('break_every', '20') as string, 10);
+// Block-intro screens already serve as natural breaks, so default off.
+// Pass ?break_every=20 to re-enable mid-block breaks.
+const BREAK_EVERY    = parseInt(getURLParam('break_every', '0') as string, 10);
 
 let CONSENT_INFO: { age: string | null; agreed: boolean } = { age: null, agreed: false };
 let SCORE = 0;
@@ -318,6 +320,60 @@ function consentTrial(): any {
   };
 }
 
+// ============ block intros ============
+// Each non-training block opens with a short Zorpie screen telling the
+// kid what's coming next. Photos block also flags the n=4 layout.
+const BLOCK_INTROS: Record<string, { title: string; emoji: string; body: string; color: string }> = {
+  warmup: {
+    title: "Let's start!",
+    emoji: '⭐',
+    body: "Find the picture that's <b>different</b> from the others.",
+    color: '#6ec1e4',
+  },
+  familiar: {
+    title: 'Things you know',
+    emoji: '🪑',
+    body: "You'll see chairs, lamps, cars, and more.<br/>Find the one that's <b>different</b>!",
+    color: '#ff6f61',
+  },
+  animals: {
+    title: 'Animals!',
+    emoji: '🐘',
+    body: "Find the animal that's <b>different</b>!",
+    color: '#993556',
+  },
+  photos: {
+    title: 'Real photos',
+    emoji: '📷',
+    body: "Now there are <b>FOUR</b> pictures!<br/>Find the one that's <b>different</b>.",
+    color: '#ff9b6e',
+  },
+  novel: {
+    title: 'Funny shapes',
+    emoji: '🌀',
+    body: "Find the funny shape that's <b>different</b>!",
+    color: '#9b59b6',
+  },
+};
+
+function blockIntro(tier: string): any {
+  const x = BLOCK_INTROS[tier];
+  if (!x) return null;
+  return {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align:center; padding: 0 24px;">
+        <img src="images/zorpie/zorpie_happy.gif" class="zorpie med" alt="" />
+        <div class="bell" style="font-size:46px;color:${x.color};margin:6px 0 14px">${x.title}</div>
+        <div style="font-size:64px;margin:8px 0">${x.emoji}</div>
+        <div style="font-size:28px; max-width:760px; margin: 0 auto 12px;">${x.body}</div>
+      </div>`,
+    choices: ["Let's go!"],
+    button_html: (c: string) => `<button class="big-btn">${c}</button>`,
+    data: { task: 'block_intro', tier },
+  };
+}
+
 // ============ jsPsych init ============
 const jsPsych = initJsPsych({
   show_progress_bar: false,
@@ -460,43 +516,67 @@ async function main(): Promise<void> {
     on_load: () => playPrompt('how_to_play'),
   });
 
-  // 3. Trials, with reminders every REMINDER_EVERY and breaks every BREAK_EVERY
-  trials.forEach((t, i) => {
-    timeline.push(makeOddityTrial(t, i, trials.length));
-    const completed = i + 1;
-    const isLast = completed === trials.length;
-    const isBreak = !isLast && BREAK_EVERY > 0 && completed % BREAK_EVERY === 0;
-    const isReminderOnly = !isLast && !isBreak && REMINDER_EVERY > 0 && completed % REMINDER_EVERY === 0;
+  // 3. Block-by-tier playback. Training and warmup are fixed at the start;
+  // remaining blocks (familiar, animals, photos, novel) are shown in random
+  // order. Each non-training block opens with a short Zorpie intro.
+  const byTier: Record<string, Trial[]> = {};
+  for (const t of trials) (byTier[t.tier] ||= []).push(t);
 
-    if (isBreak) {
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div style="text-align:center;">
-            <img src="images/zorpie/zorpie_happy.gif" class="zorpie big" alt="" />
-            <div class="bell" style="font-size:42px;color:#6ec1e4;margin-top:8px">Take a little break!</div>
-            <div style="font-size:22px;color:#666;margin-top:8px">Stretch, wiggle, or take a sip 💧</div>
-          </div>`,
-        choices: ["I'm ready!"],
-        button_html: (c: string) => `<button class="big-btn">${c}</button>`,
-      });
-    } else if (isReminderOnly) {
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div style="text-align:center;">
-            <img src="images/zorpie/zorpie_confused.gif" class="zorpie med" alt="" />
-            <div class="bell" style="font-size:36px;color:#993556;margin-top:6px">Remember!</div>
-            <div style="font-size:22px;color:#666;margin-top:6px;max-width:560px;margin-left:auto;margin-right:auto">
-              Two are the same. One is different. Tap the different one!
-            </div>
-          </div>`,
-        choices: ['Keep going!'],
-        button_html: (c: string) => `<button class="big-btn secondary">${c}</button>`,
-        on_load: () => playPrompt('reminder'),
-      });
+  const fixedOrder = ['training', 'warmup'].filter(k => byTier[k]?.length);
+  const restTiers = Object.keys(byTier).filter(k => !fixedOrder.includes(k));
+  for (let i = restTiers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [restTiers[i], restTiers[j]] = [restTiers[j], restTiers[i]];
+  }
+  const blockOrder = [...fixedOrder, ...restTiers];
+
+  let trialIndex = 0;
+  const totalTrials = trials.length;
+  for (const tier of blockOrder) {
+    const blockTrials = byTier[tier];
+    // Training already follows the global "How to play" screen, so skip its intro.
+    if (tier !== 'training') {
+      const intro = blockIntro(tier);
+      if (intro) timeline.push(intro);
     }
-  });
+    for (const t of blockTrials) {
+      timeline.push(makeOddityTrial(t, trialIndex, totalTrials));
+      const completed = trialIndex + 1;
+      const isLast = completed === totalTrials;
+      const isBreak = !isLast && BREAK_EVERY > 0 && completed % BREAK_EVERY === 0;
+      const isReminderOnly = !isLast && !isBreak && REMINDER_EVERY > 0 && completed % REMINDER_EVERY === 0;
+
+      if (isBreak) {
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `
+            <div style="text-align:center;">
+              <img src="images/zorpie/zorpie_happy.gif" class="zorpie big" alt="" />
+              <div class="bell" style="font-size:42px;color:#6ec1e4;margin-top:8px">Take a little break!</div>
+              <div style="font-size:22px;color:#666;margin-top:8px">Stretch, wiggle, or take a sip 💧</div>
+            </div>`,
+          choices: ["I'm ready!"],
+          button_html: (c: string) => `<button class="big-btn">${c}</button>`,
+        });
+      } else if (isReminderOnly) {
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `
+            <div style="text-align:center;">
+              <img src="images/zorpie/zorpie_confused.gif" class="zorpie med" alt="" />
+              <div class="bell" style="font-size:36px;color:#993556;margin-top:6px">Remember!</div>
+              <div style="font-size:22px;color:#666;margin-top:6px;max-width:560px;margin-left:auto;margin-right:auto">
+                Two are the same. One is different. Tap the different one!
+              </div>
+            </div>`,
+          choices: ['Keep going!'],
+          button_html: (c: string) => `<button class="big-btn secondary">${c}</button>`,
+          on_load: () => playPrompt('reminder'),
+        });
+      }
+      trialIndex++;
+    }
+  }
 
   jsPsych.run(timeline);
 }
