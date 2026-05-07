@@ -27,7 +27,7 @@ Or double-click `start.command` from Finder on macOS.
 mochi-kids/
 ├── public/                    # the static site GH Pages serves   → public/README.md
 │   ├── index.html             # single-file jsPsych v8 experiment
-│   ├── manifest.json          # 74 curated trials
+│   ├── manifest.json          # 80 curated trials
 │   ├── stimuli/<trial>/0..2.jpg
 │   ├── audio/                 # 3 gTTS prompts (welcome / how_to_play / reminder)
 │   └── images/zorpie/         # mascot GIFs (from vislearnlab/museumkiosk)
@@ -41,20 +41,20 @@ mochi-kids/
 └── push_to_vislearnlab.command  # one-click: gh repo create + push + enable Pages
 ```
 
-## Trial set (74 trials, two datasets)
+## Trial set (80 trials, two datasets)
 
-| tier | n | dataset | filter | adult acc |
+| tier | n | dataset | content | mean adult acc |
 | --- | --- | --- | --- | --- |
-| training | 6 | synthesized | same image × 2 + 1 different image (pop-out) | trivial |
-| warmup | 12 | shapenet | chair, lamp, bench; adjacent viewpoints; RT < 2.5s | 1.0 |
-| familiar | 32 | shapenet | chair, bench, loudspeaker, cabinet, lamp, watercraft, telephone, display | ≥ 0.95 |
-| novel | 24 | shapegen | abstract4 + abstract3 + abstract2 (3 difficulty bins) | ≥ 0.95 |
+| training | 12 | synthesized | same image × 2 + 1 different image (pop-out) | trivial |
+| warmup | 12 | shapenet | easiest chair / lamp / bench | 1.00 |
+| familiar | 48 | shapenet | 8 categories × 6 each: chair, lamp, bench, telephone, car, airplane, sofa, table | 0.96 |
+| novel | 8 | shapegen | easiest `abstract4` | 1.00 |
 
 `majaj` (HVM / Yamins-lab images) and `barense` (faces) explicitly
-excluded. Adjacent-viewpoint constraint preserved on shapenet trials so
-the rotation between matching cards stays small. See
-[`public/stimuli/README.md`](public/stimuli/README.md) for the full
-curate logic.
+excluded. Each manifest entry preserves `human_avg_adult` and
+`rt_avg_adult` so calibration analyses can use them directly. See
+[`public/stimuli/README.md`](public/stimuli/README.md) for the curate
+logic and re-run instructions.
 
 ## Audio + reward design
 
@@ -99,7 +99,7 @@ Each completed session POSTs (or the kid downloads) one JSON document:
   "participantID": "kid_xxxx",
   "study": "mochi_kids_v1",
   "consent": { "age": "6", "agreed": true },
-  "n_trials": 74, "n_correct": 58, "mean_rt": 3145.2,
+  "n_trials": 80, "n_correct": 64, "mean_rt": 3145.2,
   "trials": [{ "task": "mochi_oddity", "trial_id": "shapenet1234",
                "tier": "familiar", "condition": "chair",
                "correct": true, "rt": 2810.4,
@@ -120,7 +120,7 @@ CI runs the full suite on every push to `main`. Three layers:
 1. **Static** — JS syntax (`node --check`), Python compile, manifest
    schema + image existence checks
 2. **End-to-end** — Playwright drives a real headless Chromium through
-   the entire experiment (consent, all 74 trials, breaks, reminders,
+   the entire experiment (consent, all 80 trials, breaks, reminders,
    end screen) and asserts no console errors, all RTs captured,
    double-clicks ignored
 3. **Server** *(optional, planned)* — supertest against `/submit` with
@@ -144,7 +144,7 @@ The static client auto-disables `/submit` POSTs on `*.github.io`,
 ## Roadmap
 
 - [x] Static play-through w/ jsPsych v8, kid-friendly UX
-- [x] Curated 74-trial easy-tail set (familiar real objects + novel
+- [x] Curated 80-trial easy-tail set (familiar real objects + novel
       abstract shapes)
 - [x] Consent + age picker, scoped audio (welcome, how-to-play, every
       10-trial reminder)

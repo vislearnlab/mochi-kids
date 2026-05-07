@@ -11,4 +11,5 @@ rendering/rotation_frames/
 analysis/data/
 analysis/sanity_check.html
 analysis/*_files/
+rendering/MOCHI/
 package-lock.json
