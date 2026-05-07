@@ -146,7 +146,7 @@ const SAVE_ENABLED: boolean = getURLParam('save', 'true') !== 'false';
 // `?show_download=true` reveals a fallback "Download my data" button (dev mode).
 const SHOW_DOWNLOAD: boolean = getURLParam('show_download', 'false') === 'true';
 
-const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '10') as string, 10);
+const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '20') as string, 10);
 // Block-intro screens already serve as natural breaks, so default off.
 // Pass ?break_every=20 to re-enable mid-block breaks.
 const BREAK_EVERY    = parseInt(getURLParam('break_every', '0') as string, 10);
@@ -505,24 +505,16 @@ async function main(): Promise<void> {
   });
 
   // 3. Block-by-tier playback. Training and warmup are fixed at the start;
-  // familiar and novel each split into 2 sub-blocks (4 sub-blocks total),
-  // shuffled in random order. Each non-training block opens with a Zorpie
-  // intro. Sub-blocks of the same tier reuse the same intro.
+  // familiar and novel each play as one long block, with their order
+  // counterbalanced (50/50 random per session). Each non-training block
+  // opens with a short Zorpie intro.
   const byTier: Record<string, Trial[]> = {};
   for (const t of trials) (byTier[t.tier] ||= []).push(t);
-
-  const splitInHalf = <T,>(arr: T[]): T[][] => {
-    const mid = Math.ceil(arr.length / 2);
-    return [arr.slice(0, mid), arr.slice(mid)];
-  };
 
   type Block = { tier: string; trials: Trial[] };
   const middle: Block[] = [];
   for (const tier of ['familiar', 'novel']) {
-    if (!byTier[tier]?.length) continue;
-    for (const half of splitInHalf(byTier[tier])) {
-      if (half.length) middle.push({ tier, trials: half });
-    }
+    if (byTier[tier]?.length) middle.push({ tier, trials: byTier[tier] });
   }
   for (let i = middle.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
