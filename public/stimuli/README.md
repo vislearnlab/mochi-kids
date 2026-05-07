@@ -15,28 +15,33 @@ stimuli/
 
 Source: `tzler/MOCHI` on Hugging Face (Bonnen et al., NeurIPS 2024 D&B).
 
-Strategy: per-category, sort by adult accuracy desc (then RT_avg asc)
-and take the easiest N — instead of a hard `human_avg ≥ 0.95` cutoff
-that excluded kid-friendly categories like car/airplane/sofa/table.
-Each manifest entry preserves `human_avg_adult` and `rt_avg_adult` so
-calibration analyses can use them as continuous difficulty signals.
+Strategy:
+- **familiar** — per-category, sort by adult accuracy desc and take
+  the easiest N. Categories chosen for kid familiarity; dropped from
+  the original recipe: watercraft, cabinet, loudspeaker, display.
+- **novel** — random sample from each abstract bin (no easiest-only
+  filter). Preserves the natural difficulty distribution of each bin
+  so the novel block isn't pinned at adult ceiling.
 
-Pulls from all four MOCHI sub-datasets, mixing visual styles for
-engagement: shapenet (gray renders), majaj (B&W photos), barense
-(full-color photos), shapegen (abstract gray renders). Categories
-chosen for kid familiarity; dropped from the original recipe:
-watercraft, cabinet, loudspeaker, display.
+All trials use gray-render visual style (shapenet + shapegen). The
+`majaj` (B&W photo) and `barense` (color photo) sub-datasets were
+tried earlier but felt visually inconsistent for kids.
+
+Each manifest entry preserves `human_avg_adult` and `rt_avg_adult`
+so calibration analyses can use them as continuous difficulty signals.
 
 ## Tier composition
 
-| tier | n | n_objects | what | source / visual style |
-| --- | --- | --- | --- | --- |
-| training | 12 | 3 | same image duplicated × 2 + a different image | synthesized at curate time, gray render |
-| warmup | 12 | 3 | easiest chair/lamp/bench (mean adult acc=1.0) | shapenet, gray render |
-| familiar | 24 | 3 | 8 categories × 3 each: chair, lamp, bench, telephone, car, airplane, sofa, table | shapenet, gray render |
-| animals | 16 | 3 | easiest dogs/elephants/etc. (mean adult acc=1.0) | majaj, B&W photo with circular vignette |
-| photos | 8 | **4** | full-color real-object photos (mean adult acc≥0.99) | barense `familiar_lowsim` |
-| novel | 8 | 3 | easiest abstract4 (mean adult acc=1.0) | shapegen |
+| tier | n | what | source / visual style |
+| --- | --- | --- | --- |
+| training | 12 | same image duplicated × 2 + a different image | synthesized at curate time, gray render |
+| warmup | 12 | easiest chair/lamp/bench (mean adult acc=1.0) | shapenet, gray render |
+| familiar | 28 | 8 categories: chair, lamp, bench, telephone (4 each) + car, airplane, sofa, table (3 each) | shapenet, gray render |
+| novel | 28 | random sample from abstract4 + abstract3 + abstract2 (12+8+8) | shapegen, gray render |
+
+All trials are 3-AFC (`n_objects=3`). Familiar and novel each split
+into 2 sub-blocks at runtime; the four sub-blocks play in random
+order after warmup.
 
 Order in the manifest: training → warmup → familiar (shuffled) →
 novel (shuffled). Reminders interleaved every 10, breaks every 20.

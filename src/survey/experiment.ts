@@ -157,7 +157,7 @@ let SCORE = 0;
 // ============ types ============
 interface Trial {
   trial_id: string;
-  tier: 'training' | 'warmup' | 'familiar' | 'animals' | 'photos' | 'novel';
+  tier: 'training' | 'warmup' | 'familiar' | 'novel';
   dataset: string;
   condition: string;
   n_objects: number;
@@ -336,18 +336,6 @@ const BLOCK_INTROS: Record<string, { title: string; emoji: string; body: string;
     body: "You'll see chairs, lamps, cars, and more.<br/>Find the one that's <b>different</b>!",
     color: '#ff6f61',
   },
-  animals: {
-    title: 'Animals!',
-    emoji: '🐘',
-    body: "Find the animal that's <b>different</b>!",
-    color: '#993556',
-  },
-  photos: {
-    title: 'Real photos',
-    emoji: '📷',
-    body: "Now there are <b>FOUR</b> pictures!<br/>Find the one that's <b>different</b>.",
-    color: '#ff9b6e',
-  },
   novel: {
     title: 'Funny shapes',
     emoji: '🌀',
@@ -517,23 +505,39 @@ async function main(): Promise<void> {
   });
 
   // 3. Block-by-tier playback. Training and warmup are fixed at the start;
-  // remaining blocks (familiar, animals, photos, novel) are shown in random
-  // order. Each non-training block opens with a short Zorpie intro.
+  // familiar and novel each split into 2 sub-blocks (4 sub-blocks total),
+  // shuffled in random order. Each non-training block opens with a Zorpie
+  // intro. Sub-blocks of the same tier reuse the same intro.
   const byTier: Record<string, Trial[]> = {};
   for (const t of trials) (byTier[t.tier] ||= []).push(t);
 
-  const fixedOrder = ['training', 'warmup'].filter(k => byTier[k]?.length);
-  const restTiers = Object.keys(byTier).filter(k => !fixedOrder.includes(k));
-  for (let i = restTiers.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [restTiers[i], restTiers[j]] = [restTiers[j], restTiers[i]];
+  const splitInHalf = <T,>(arr: T[]): T[][] => {
+    const mid = Math.ceil(arr.length / 2);
+    return [arr.slice(0, mid), arr.slice(mid)];
+  };
+
+  type Block = { tier: string; trials: Trial[] };
+  const middle: Block[] = [];
+  for (const tier of ['familiar', 'novel']) {
+    if (!byTier[tier]?.length) continue;
+    for (const half of splitInHalf(byTier[tier])) {
+      if (half.length) middle.push({ tier, trials: half });
+    }
   }
-  const blockOrder = [...fixedOrder, ...restTiers];
+  for (let i = middle.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [middle[i], middle[j]] = [middle[j], middle[i]];
+  }
+  const blockOrder: Block[] = [
+    ...(byTier.training ? [{ tier: 'training', trials: byTier.training }] : []),
+    ...(byTier.warmup ? [{ tier: 'warmup', trials: byTier.warmup }] : []),
+    ...middle,
+  ];
 
   let trialIndex = 0;
   const totalTrials = trials.length;
-  for (const tier of blockOrder) {
-    const blockTrials = byTier[tier];
+  for (const block of blockOrder) {
+    const { tier, trials: blockTrials } = block;
     // Training already follows the global "How to play" screen, so skip its intro.
     if (tier !== 'training') {
       const intro = blockIntro(tier);

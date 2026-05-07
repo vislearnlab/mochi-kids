@@ -41,16 +41,18 @@ mochi-kids/
 └── push_to_vislearnlab.command  # one-click: gh repo create + push + enable Pages
 ```
 
-## Trial set (80 trials, mixed sources)
+## Trial set (80 trials, gray-render only)
 
 | tier | n | dataset | content | mean adult acc |
 | --- | --- | --- | --- | --- |
 | training | 12 | synthesized | same image × 2 + 1 different image (pop-out) | trivial |
 | warmup | 12 | shapenet | easiest chair / lamp / bench | 1.00 |
-| familiar | 24 | shapenet | 8 categories × 3 each: chair, lamp, bench, telephone, car, airplane, sofa, table | 0.96 |
-| animals | 16 | majaj | easiest dogs / elephants / etc. (B&W photos w/ vignette) | 1.00 |
-| photos | 8 | barense | full-color real-object photos, **n_objects=4** | 1.00 |
-| novel | 8 | shapegen | easiest `abstract4` | 1.00 |
+| familiar | 28 | shapenet | 8 categories: chair, lamp, bench, telephone (4 each) + car, airplane, sofa, table (3 each) | 0.97 |
+| novel | 28 | shapegen | random sample from `abstract4`/`abstract3`/`abstract2` | 0.91 |
+
+Familiar and novel each split into 2 sub-blocks at runtime; the four
+sub-blocks play in random order after warmup. Each block opens with a
+short Zorpie intro screen.
 
 Each manifest entry preserves `human_avg_adult` and `rt_avg_adult`
 so calibration analyses can use them directly. See

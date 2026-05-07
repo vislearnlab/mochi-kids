@@ -35,11 +35,12 @@ MANIFEST_PATH = ROOT / "public" / "manifest.json"
 WARMUP_CATEGORIES = ["chair", "lamp", "bench"]
 FAMILIAR_CATEGORIES = ["chair", "lamp", "bench", "telephone",
                        "car", "airplane", "sofa", "table"]
+# 8 cats × ~3.5 each = 28. First 4 cats get 4 trials, next 4 get 3.
+FAMILIAR_PER_CAT_HIGH = 4   # chair, lamp, bench, telephone
+FAMILIAR_PER_CAT_LOW = 3    # car, airplane, sofa, table
 WARMUP_N = 12
-FAMILIAR_PER_CAT = 3   # 8 cats × 3 = 24
-ANIMALS_N = 16         # majaj animals (B&W photos)
-PHOTOS_N = 8           # barense familiar_lowsim (color photos, n=4)
-NOVEL_N = 8            # abstract4 only
+# Novel: mix abstract4/3/2 to add a difficulty ramp instead of all-easy.
+NOVEL_BREAKDOWN = {"abstract4": 12, "abstract3": 8, "abstract2": 8}  # 28 total
 TRAINING_N = 12
 
 JPEG_MAX_DIM = 512
@@ -64,6 +65,16 @@ def take_easiest(rows, n):
     """Sort by human_avg desc, RT_avg asc; take top n."""
     return rows.sort_values(["human_avg", "RT_avg"],
                             ascending=[False, True]).head(n)
+
+
+def take_random(rows, n, rng):
+    """Reproducibly sample n rows from the bin (preserves natural difficulty
+    distribution instead of clipping to ceiling)."""
+    rows_sorted = rows.sort_values("trial").reset_index(drop=True)
+    if len(rows_sorted) <= n:
+        return rows_sorted
+    idx = sorted(rng.sample(range(len(rows_sorted)), n))
+    return rows_sorted.iloc[idx]
 
 
 def emit_trial(row, tier, trial_id, manifest):
@@ -171,61 +182,51 @@ def main():
     for _, row in warmup_picks.iterrows():
         emit_trial(row, "warmup", str(row["trial"]), manifest)
 
-    # 3. Familiar: 6 easiest from each of 8 categories, excluding warmup picks.
-    print(f"familiar: 6 per cat × {len(FAMILIAR_CATEGORIES)} cats…")
+    # 3. Familiar: top N easiest per category (excluding warmup picks).
+    print(f"familiar: {len(FAMILIAR_CATEGORIES)} cats…")
     fam_total_acc = []
     for cat in FAMILIAR_CATEGORIES:
+        per_cat = FAMILIAR_PER_CAT_HIGH if cat in {"chair", "lamp", "bench", "telephone"} else FAMILIAR_PER_CAT_LOW
         cat_rows = df[(df["dataset"] == "shapenet")
                       & (df["n_objects"] == 3)
                       & (df["condition"] == cat)
                       & (~df["trial"].isin(used_trial_ids))]
-        picks = take_easiest(cat_rows, FAMILIAR_PER_CAT)
-        print(f"  {cat}: {len(picks)}/{FAMILIAR_PER_CAT} (mean acc={picks['human_avg'].mean():.2f}, range {picks['human_avg'].min():.2f}-{picks['human_avg'].max():.2f})")
+        picks = take_easiest(cat_rows, per_cat)
+        print(f"  {cat}: {len(picks)}/{per_cat} (mean acc={picks['human_avg'].mean():.2f}, range {picks['human_avg'].min():.2f}-{picks['human_avg'].max():.2f})")
         fam_total_acc.extend(picks["human_avg"].tolist())
         for _, row in picks.iterrows():
             used_trial_ids.add(row["trial"])
             emit_trial(row, "familiar", str(row["trial"]), manifest)
     print(f"familiar overall mean acc: {sum(fam_total_acc)/len(fam_total_acc):.2f}")
 
-    # 4. Animals: easiest majaj animals (B&W photos with circular vignette).
-    animals_rows = df[(df["dataset"] == "majaj")
-                      & (df["n_objects"] == 3)
-                      & (df["condition"] == "animals")]
-    animals_picks = take_easiest(animals_rows, ANIMALS_N)
-    print(f"animals (majaj): {len(animals_picks)} (mean acc={animals_picks['human_avg'].mean():.2f})")
-    for _, row in animals_picks.iterrows():
-        emit_trial(row, "animals", str(row["trial"]), manifest)
-
-    # 5. Photos: barense familiar_lowsim (n=4, full-color real-object photos).
-    photos_rows = df[(df["dataset"] == "barense")
-                     & (df["condition"] == "familiar_lowsim")]
-    photos_picks = take_easiest(photos_rows, PHOTOS_N)
-    print(f"photos (barense): {len(photos_picks)} (mean acc={photos_picks['human_avg'].mean():.2f}, n_objects=4)")
-    for _, row in photos_picks.iterrows():
-        emit_trial(row, "photos", str(row["trial"]), manifest)
-
-    # 6. Novel: easiest abstract4.
-    novel_rows = df[(df["dataset"] == "shapegen")
-                    & (df["n_objects"] == 3)
-                    & (df["condition"] == "abstract4")]
-    novel_picks = take_easiest(novel_rows, NOVEL_N)
-    print(f"novel (abstract4): {len(novel_picks)} (mean acc={novel_picks['human_avg'].mean():.2f})")
-    for _, row in novel_picks.iterrows():
-        emit_trial(row, "novel", str(row["trial"]), manifest)
+    # 4. Novel: random sample from each abstract bin so we get the bin's
+    # natural difficulty (not just ceiling). abstract4 mean=0.94, abstract3
+    # mean=0.88, abstract2 mean=0.84 → mixed novel block lands around 0.89.
+    print(f"novel: random sample from {NOVEL_BREAKDOWN}")
+    novel_rng = random.Random(7)
+    nov_total_acc = []
+    for cond, n in NOVEL_BREAKDOWN.items():
+        rows = df[(df["dataset"] == "shapegen")
+                  & (df["n_objects"] == 3)
+                  & (df["condition"] == cond)]
+        picks = take_random(rows, n, novel_rng)
+        print(f"  {cond}: {len(picks)} (mean acc={picks['human_avg'].mean():.2f}, range {picks['human_avg'].min():.2f}-{picks['human_avg'].max():.2f})")
+        nov_total_acc.extend(picks["human_avg"].tolist())
+        for _, row in picks.iterrows():
+            emit_trial(row, "novel", str(row["trial"]), manifest)
+    print(f"novel overall mean acc: {sum(nov_total_acc)/len(nov_total_acc):.2f}")
 
     # Keep each tier as its own block (internal shuffle only). The client
-    # groups by tier at runtime and randomizes the post-warmup block order,
-    # so canonical curate-time order doesn't matter beyond within-block.
-    by_tier = {"training": [], "warmup": [], "familiar": [],
-               "animals": [], "photos": [], "novel": []}
+    # groups by tier at runtime, splits familiar/novel into 2 sub-blocks
+    # each, and randomizes the 4-block post-warmup order.
+    by_tier = {"training": [], "warmup": [], "familiar": [], "novel": []}
     for t in manifest:
         by_tier[t["tier"]].append(t)
     rng = random.Random(42)
-    for k in ["familiar", "animals", "photos", "novel"]:
+    for k in ["familiar", "novel"]:
         rng.shuffle(by_tier[k])
     final = (by_tier["training"] + by_tier["warmup"]
-             + by_tier["familiar"] + by_tier["animals"]
-             + by_tier["photos"] + by_tier["novel"])
+             + by_tier["familiar"] + by_tier["novel"])
 
     out = {"trials": final}
     MANIFEST_PATH.write_text(json.dumps(out, indent=2))
