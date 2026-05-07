@@ -361,409 +361,19 @@
       "rt_avg_adult": 1963.8235294117649
     },
     {
-      "trial_id": "shapenet685",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "car",
+      "trial_id": "hvm119",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
       "n_objects": 3,
       "oddity_index": 1,
       "images": [
-        "stimuli/shapenet685/0.jpg",
-        "stimuli/shapenet685/1.jpg",
-        "stimuli/shapenet685/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 3701.6
-    },
-    {
-      "trial_id": "shapenet240",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "telephone",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet240/0.jpg",
-        "stimuli/shapenet240/1.jpg",
-        "stimuli/shapenet240/2.jpg"
+        "stimuli/hvm119/0.jpg",
+        "stimuli/hvm119/1.jpg",
+        "stimuli/hvm119/2.jpg"
       ],
       "human_avg_adult": 1.0,
-      "rt_avg_adult": 2638.611111111112
-    },
-    {
-      "trial_id": "shapenet109",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "car",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet109/0.jpg",
-        "stimuli/shapenet109/1.jpg",
-        "stimuli/shapenet109/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 2859.9
-    },
-    {
-      "trial_id": "shapenet1241",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "lamp",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1241/0.jpg",
-        "stimuli/shapenet1241/1.jpg",
-        "stimuli/shapenet1241/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2518.058823529412
-    },
-    {
-      "trial_id": "shapenet1460",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "telephone",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet1460/0.jpg",
-        "stimuli/shapenet1460/1.jpg",
-        "stimuli/shapenet1460/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2425.9473684210525
-    },
-    {
-      "trial_id": "shapenet335",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "lamp",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet335/0.jpg",
-        "stimuli/shapenet335/1.jpg",
-        "stimuli/shapenet335/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2504.9375
-    },
-    {
-      "trial_id": "shapenet598",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "airplane",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet598/0.jpg",
-        "stimuli/shapenet598/1.jpg",
-        "stimuli/shapenet598/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 2865.8
-    },
-    {
-      "trial_id": "shapenet514",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "sofa",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet514/0.jpg",
-        "stimuli/shapenet514/1.jpg",
-        "stimuli/shapenet514/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2167.5263157894738
-    },
-    {
-      "trial_id": "shapenet534",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "bench",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet534/0.jpg",
-        "stimuli/shapenet534/1.jpg",
-        "stimuli/shapenet534/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2007.4736842105265
-    },
-    {
-      "trial_id": "shapenet1402",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "chair",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet1402/0.jpg",
-        "stimuli/shapenet1402/1.jpg",
-        "stimuli/shapenet1402/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2083.894736842105
-    },
-    {
-      "trial_id": "shapenet1026",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "airplane",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1026/0.jpg",
-        "stimuli/shapenet1026/1.jpg",
-        "stimuli/shapenet1026/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2644.5789473684213
-    },
-    {
-      "trial_id": "shapenet966",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "chair",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet966/0.jpg",
-        "stimuli/shapenet966/1.jpg",
-        "stimuli/shapenet966/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2115.315789473684
-    },
-    {
-      "trial_id": "shapenet46",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "table",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet46/0.jpg",
-        "stimuli/shapenet46/1.jpg",
-        "stimuli/shapenet46/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 3330.3
-    },
-    {
-      "trial_id": "shapenet677",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "car",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet677/0.jpg",
-        "stimuli/shapenet677/1.jpg",
-        "stimuli/shapenet677/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 3270.55
-    },
-    {
-      "trial_id": "shapenet1439",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "lamp",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet1439/0.jpg",
-        "stimuli/shapenet1439/1.jpg",
-        "stimuli/shapenet1439/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2610.2105263157896
-    },
-    {
-      "trial_id": "shapenet1009",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "airplane",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet1009/0.jpg",
-        "stimuli/shapenet1009/1.jpg",
-        "stimuli/shapenet1009/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2361.5789473684213
-    },
-    {
-      "trial_id": "shapenet623",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "car",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet623/0.jpg",
-        "stimuli/shapenet623/1.jpg",
-        "stimuli/shapenet623/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 3629.35
-    },
-    {
-      "trial_id": "shapenet527",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "sofa",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet527/0.jpg",
-        "stimuli/shapenet527/1.jpg",
-        "stimuli/shapenet527/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2624.1052631578946
-    },
-    {
-      "trial_id": "shapenet447",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "telephone",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet447/0.jpg",
-        "stimuli/shapenet447/1.jpg",
-        "stimuli/shapenet447/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 1757.0526315789473
-    },
-    {
-      "trial_id": "shapenet4",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "airplane",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet4/0.jpg",
-        "stimuli/shapenet4/1.jpg",
-        "stimuli/shapenet4/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 3295.55
-    },
-    {
-      "trial_id": "shapenet1486",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "table",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet1486/0.jpg",
-        "stimuli/shapenet1486/1.jpg",
-        "stimuli/shapenet1486/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2511.368421052632
-    },
-    {
-      "trial_id": "shapenet938",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "airplane",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet938/0.jpg",
-        "stimuli/shapenet938/1.jpg",
-        "stimuli/shapenet938/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2318.368421052632
-    },
-    {
-      "trial_id": "shapenet125",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "sofa",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet125/0.jpg",
-        "stimuli/shapenet125/1.jpg",
-        "stimuli/shapenet125/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 3071.4
-    },
-    {
-      "trial_id": "shapenet48",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "car",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet48/0.jpg",
-        "stimuli/shapenet48/1.jpg",
-        "stimuli/shapenet48/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 3094.7
-    },
-    {
-      "trial_id": "shapenet1392",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "telephone",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1392/0.jpg",
-        "stimuli/shapenet1392/1.jpg",
-        "stimuli/shapenet1392/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2339.0
-    },
-    {
-      "trial_id": "shapenet1484",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "telephone",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1484/0.jpg",
-        "stimuli/shapenet1484/1.jpg",
-        "stimuli/shapenet1484/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2494.736842105264
-    },
-    {
-      "trial_id": "shapenet958",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "table",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet958/0.jpg",
-        "stimuli/shapenet958/1.jpg",
-        "stimuli/shapenet958/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2596.4736842105262
+      "rt_avg_adult": 1490.4
     },
     {
       "trial_id": "shapenet1085",
@@ -781,19 +391,19 @@
       "rt_avg_adult": 2027.0
     },
     {
-      "trial_id": "shapenet232",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "chair",
+      "trial_id": "hvm112",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
       "n_objects": 3,
-      "oddity_index": 1,
+      "oddity_index": 0,
       "images": [
-        "stimuli/shapenet232/0.jpg",
-        "stimuli/shapenet232/1.jpg",
-        "stimuli/shapenet232/2.jpg"
+        "stimuli/hvm112/0.jpg",
+        "stimuli/hvm112/1.jpg",
+        "stimuli/hvm112/2.jpg"
       ],
       "human_avg_adult": 1.0,
-      "rt_avg_adult": 1979.7777777777776
+      "rt_avg_adult": 1369.470588235294
     },
     {
       "trial_id": "shapenet1299",
@@ -811,21 +421,6 @@
       "rt_avg_adult": 2168.5625
     },
     {
-      "trial_id": "shapenet410",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "bench",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet410/0.jpg",
-        "stimuli/shapenet410/1.jpg",
-        "stimuli/shapenet410/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2198.470588235294
-    },
-    {
       "trial_id": "shapenet18",
       "tier": "familiar",
       "dataset": "shapenet",
@@ -841,124 +436,64 @@
       "rt_avg_adult": 2312.55
     },
     {
-      "trial_id": "shapenet142",
+      "trial_id": "shapenet447",
       "tier": "familiar",
       "dataset": "shapenet",
-      "condition": "bench",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet142/0.jpg",
-        "stimuli/shapenet142/1.jpg",
-        "stimuli/shapenet142/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2027.55
-    },
-    {
-      "trial_id": "shapenet979",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "sofa",
+      "condition": "telephone",
       "n_objects": 3,
       "oddity_index": 2,
       "images": [
-        "stimuli/shapenet979/0.jpg",
-        "stimuli/shapenet979/1.jpg",
-        "stimuli/shapenet979/2.jpg"
+        "stimuli/shapenet447/0.jpg",
+        "stimuli/shapenet447/1.jpg",
+        "stimuli/shapenet447/2.jpg"
       ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 1820.6315789473683
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1757.0526315789473
     },
     {
-      "trial_id": "shapenet1099",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "table",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1099/0.jpg",
-        "stimuli/shapenet1099/1.jpg",
-        "stimuli/shapenet1099/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2354.736842105264
-    },
-    {
-      "trial_id": "shapenet379",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "chair",
+      "trial_id": "hvm122",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
       "n_objects": 3,
       "oddity_index": 2,
       "images": [
-        "stimuli/shapenet379/0.jpg",
-        "stimuli/shapenet379/1.jpg",
-        "stimuli/shapenet379/2.jpg"
+        "stimuli/hvm122/0.jpg",
+        "stimuli/hvm122/1.jpg",
+        "stimuli/hvm122/2.jpg"
       ],
       "human_avg_adult": 1.0,
-      "rt_avg_adult": 2007.75
+      "rt_avg_adult": 1539.8125
     },
     {
-      "trial_id": "shapenet12",
+      "trial_id": "hvm46",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/hvm46/0.jpg",
+        "stimuli/hvm46/1.jpg",
+        "stimuli/hvm46/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1645.375
+    },
+    {
+      "trial_id": "shapenet109",
       "tier": "familiar",
       "dataset": "shapenet",
       "condition": "car",
       "n_objects": 3,
-      "oddity_index": 0,
+      "oddity_index": 1,
       "images": [
-        "stimuli/shapenet12/0.jpg",
-        "stimuli/shapenet12/1.jpg",
-        "stimuli/shapenet12/2.jpg"
+        "stimuli/shapenet109/0.jpg",
+        "stimuli/shapenet109/1.jpg",
+        "stimuli/shapenet109/2.jpg"
       ],
       "human_avg_adult": 0.925,
-      "rt_avg_adult": 3459.0
-    },
-    {
-      "trial_id": "shapenet628",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "sofa",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet628/0.jpg",
-        "stimuli/shapenet628/1.jpg",
-        "stimuli/shapenet628/2.jpg"
-      ],
-      "human_avg_adult": 0.925,
-      "rt_avg_adult": 4324.9
-    },
-    {
-      "trial_id": "shapenet1321",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "chair",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1321/0.jpg",
-        "stimuli/shapenet1321/1.jpg",
-        "stimuli/shapenet1321/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2165.8823529411766
-    },
-    {
-      "trial_id": "shapenet1478",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "airplane",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1478/0.jpg",
-        "stimuli/shapenet1478/1.jpg",
-        "stimuli/shapenet1478/2.jpg"
-      ],
-      "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2479.4210526315787
+      "rt_avg_adult": 2859.9
     },
     {
       "trial_id": "shapenet1477",
@@ -976,79 +511,19 @@
       "rt_avg_adult": 1980.7368421052631
     },
     {
-      "trial_id": "shapenet1082",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "lamp",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1082/0.jpg",
-        "stimuli/shapenet1082/1.jpg",
-        "stimuli/shapenet1082/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2451.055555555556
-    },
-    {
-      "trial_id": "shapenet1147",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "bench",
-      "n_objects": 3,
-      "oddity_index": 0,
-      "images": [
-        "stimuli/shapenet1147/0.jpg",
-        "stimuli/shapenet1147/1.jpg",
-        "stimuli/shapenet1147/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2069.8888888888887
-    },
-    {
-      "trial_id": "shapenet3",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "bench",
-      "n_objects": 3,
-      "oddity_index": 1,
-      "images": [
-        "stimuli/shapenet3/0.jpg",
-        "stimuli/shapenet3/1.jpg",
-        "stimuli/shapenet3/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2193.85
-    },
-    {
-      "trial_id": "shapenet886",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "bench",
+      "trial_id": "hvm132",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
       "n_objects": 3,
       "oddity_index": 2,
       "images": [
-        "stimuli/shapenet886/0.jpg",
-        "stimuli/shapenet886/1.jpg",
-        "stimuli/shapenet886/2.jpg"
+        "stimuli/hvm132/0.jpg",
+        "stimuli/hvm132/1.jpg",
+        "stimuli/hvm132/2.jpg"
       ],
       "human_avg_adult": 1.0,
-      "rt_avg_adult": 2271.7894736842104
-    },
-    {
-      "trial_id": "shapenet1074",
-      "tier": "familiar",
-      "dataset": "shapenet",
-      "condition": "chair",
-      "n_objects": 3,
-      "oddity_index": 2,
-      "images": [
-        "stimuli/shapenet1074/0.jpg",
-        "stimuli/shapenet1074/1.jpg",
-        "stimuli/shapenet1074/2.jpg"
-      ],
-      "human_avg_adult": 1.0,
-      "rt_avg_adult": 2001.8333333333333
+      "rt_avg_adult": 1603.9375
     },
     {
       "trial_id": "shapenet431",
@@ -1066,19 +541,552 @@
       "rt_avg_adult": 2228.0526315789475
     },
     {
-      "trial_id": "shapenet1429",
+      "trial_id": "familiar_low_screen01",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/familiar_low_screen01/0.jpg",
+        "stimuli/familiar_low_screen01/1.jpg",
+        "stimuli/familiar_low_screen01/2.jpg",
+        "stimuli/familiar_low_screen01/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1893.4782608695648
+    },
+    {
+      "trial_id": "hvm141",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/hvm141/0.jpg",
+        "stimuli/hvm141/1.jpg",
+        "stimuli/hvm141/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1425.4545454545455
+    },
+    {
+      "trial_id": "shapenet1392",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "telephone",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet1392/0.jpg",
+        "stimuli/shapenet1392/1.jpg",
+        "stimuli/shapenet1392/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 2339.0
+    },
+    {
+      "trial_id": "hvm65",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/hvm65/0.jpg",
+        "stimuli/hvm65/1.jpg",
+        "stimuli/hvm65/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1576.7222222222222
+    },
+    {
+      "trial_id": "hvm170",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/hvm170/0.jpg",
+        "stimuli/hvm170/1.jpg",
+        "stimuli/hvm170/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1444.2916666666667
+    },
+    {
+      "trial_id": "familiar_low_screen27",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/familiar_low_screen27/0.jpg",
+        "stimuli/familiar_low_screen27/1.jpg",
+        "stimuli/familiar_low_screen27/2.jpg",
+        "stimuli/familiar_low_screen27/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1845.870967741936
+    },
+    {
+      "trial_id": "shapenet125",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "sofa",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet125/0.jpg",
+        "stimuli/shapenet125/1.jpg",
+        "stimuli/shapenet125/2.jpg"
+      ],
+      "human_avg_adult": 0.925,
+      "rt_avg_adult": 3071.4
+    },
+    {
+      "trial_id": "hvm42",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/hvm42/0.jpg",
+        "stimuli/hvm42/1.jpg",
+        "stimuli/hvm42/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1541.8235294117646
+    },
+    {
+      "trial_id": "familiar_low_screen25",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 3,
+      "images": [
+        "stimuli/familiar_low_screen25/0.jpg",
+        "stimuli/familiar_low_screen25/1.jpg",
+        "stimuli/familiar_low_screen25/2.jpg",
+        "stimuli/familiar_low_screen25/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1976.4137931034484
+    },
+    {
+      "trial_id": "hvm69",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/hvm69/0.jpg",
+        "stimuli/hvm69/1.jpg",
+        "stimuli/hvm69/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1554.9473684210527
+    },
+    {
+      "trial_id": "hvm173",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/hvm173/0.jpg",
+        "stimuli/hvm173/1.jpg",
+        "stimuli/hvm173/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1605.0
+    },
+    {
+      "trial_id": "hvm38",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/hvm38/0.jpg",
+        "stimuli/hvm38/1.jpg",
+        "stimuli/hvm38/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1405.8
+    },
+    {
+      "trial_id": "shapenet979",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "sofa",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet979/0.jpg",
+        "stimuli/shapenet979/1.jpg",
+        "stimuli/shapenet979/2.jpg"
+      ],
+      "human_avg_adult": 0.9210526315789472,
+      "rt_avg_adult": 1820.6315789473683
+    },
+    {
+      "trial_id": "shapenet46",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "table",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet46/0.jpg",
+        "stimuli/shapenet46/1.jpg",
+        "stimuli/shapenet46/2.jpg"
+      ],
+      "human_avg_adult": 0.925,
+      "rt_avg_adult": 3330.3
+    },
+    {
+      "trial_id": "familiar_low_screen32",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 3,
+      "images": [
+        "stimuli/familiar_low_screen32/0.jpg",
+        "stimuli/familiar_low_screen32/1.jpg",
+        "stimuli/familiar_low_screen32/2.jpg",
+        "stimuli/familiar_low_screen32/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1996.32
+    },
+    {
+      "trial_id": "familiar_low_screen18",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 3,
+      "images": [
+        "stimuli/familiar_low_screen18/0.jpg",
+        "stimuli/familiar_low_screen18/1.jpg",
+        "stimuli/familiar_low_screen18/2.jpg",
+        "stimuli/familiar_low_screen18/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1927.793103448276
+    },
+    {
+      "trial_id": "shapenet232",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet232/0.jpg",
+        "stimuli/shapenet232/1.jpg",
+        "stimuli/shapenet232/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1979.7777777777776
+    },
+    {
+      "trial_id": "shapenet628",
       "tier": "familiar",
       "dataset": "shapenet",
       "condition": "sofa",
       "n_objects": 3,
       "oddity_index": 0,
       "images": [
-        "stimuli/shapenet1429/0.jpg",
-        "stimuli/shapenet1429/1.jpg",
-        "stimuli/shapenet1429/2.jpg"
+        "stimuli/shapenet628/0.jpg",
+        "stimuli/shapenet628/1.jpg",
+        "stimuli/shapenet628/2.jpg"
+      ],
+      "human_avg_adult": 0.925,
+      "rt_avg_adult": 4324.9
+    },
+    {
+      "trial_id": "shapenet4",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "airplane",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet4/0.jpg",
+        "stimuli/shapenet4/1.jpg",
+        "stimuli/shapenet4/2.jpg"
+      ],
+      "human_avg_adult": 0.925,
+      "rt_avg_adult": 3295.55
+    },
+    {
+      "trial_id": "familiar_low_screen08",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 3,
+      "images": [
+        "stimuli/familiar_low_screen08/0.jpg",
+        "stimuli/familiar_low_screen08/1.jpg",
+        "stimuli/familiar_low_screen08/2.jpg",
+        "stimuli/familiar_low_screen08/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1859.217391304348
+    },
+    {
+      "trial_id": "shapenet48",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "car",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet48/0.jpg",
+        "stimuli/shapenet48/1.jpg",
+        "stimuli/shapenet48/2.jpg"
+      ],
+      "human_avg_adult": 0.925,
+      "rt_avg_adult": 3094.7
+    },
+    {
+      "trial_id": "hvm47",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/hvm47/0.jpg",
+        "stimuli/hvm47/1.jpg",
+        "stimuli/hvm47/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1622.875
+    },
+    {
+      "trial_id": "familiar_low_screen24",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/familiar_low_screen24/0.jpg",
+        "stimuli/familiar_low_screen24/1.jpg",
+        "stimuli/familiar_low_screen24/2.jpg",
+        "stimuli/familiar_low_screen24/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1955.032258064516
+    },
+    {
+      "trial_id": "shapenet379",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet379/0.jpg",
+        "stimuli/shapenet379/1.jpg",
+        "stimuli/shapenet379/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 2007.75
+    },
+    {
+      "trial_id": "hvm79",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/hvm79/0.jpg",
+        "stimuli/hvm79/1.jpg",
+        "stimuli/hvm79/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1427.0526315789473
+    },
+    {
+      "trial_id": "hvm43",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/hvm43/0.jpg",
+        "stimuli/hvm43/1.jpg",
+        "stimuli/hvm43/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1621.7894736842106
+    },
+    {
+      "trial_id": "shapenet1082",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "lamp",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet1082/0.jpg",
+        "stimuli/shapenet1082/1.jpg",
+        "stimuli/shapenet1082/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 2451.055555555556
+    },
+    {
+      "trial_id": "hvm257",
+      "tier": "animals",
+      "dataset": "majaj",
+      "condition": "animals",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/hvm257/0.jpg",
+        "stimuli/hvm257/1.jpg",
+        "stimuli/hvm257/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1595.6315789473683
+    },
+    {
+      "trial_id": "shapenet534",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "bench",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet534/0.jpg",
+        "stimuli/shapenet534/1.jpg",
+        "stimuli/shapenet534/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 2007.4736842105265
+    },
+    {
+      "trial_id": "shapenet1147",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "bench",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet1147/0.jpg",
+        "stimuli/shapenet1147/1.jpg",
+        "stimuli/shapenet1147/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 2069.8888888888887
+    },
+    {
+      "trial_id": "shapenet677",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "car",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet677/0.jpg",
+        "stimuli/shapenet677/1.jpg",
+        "stimuli/shapenet677/2.jpg"
+      ],
+      "human_avg_adult": 0.925,
+      "rt_avg_adult": 3270.55
+    },
+    {
+      "trial_id": "shapenet598",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "airplane",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet598/0.jpg",
+        "stimuli/shapenet598/1.jpg",
+        "stimuli/shapenet598/2.jpg"
+      ],
+      "human_avg_adult": 0.925,
+      "rt_avg_adult": 2865.8
+    },
+    {
+      "trial_id": "shapenet938",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "airplane",
+      "n_objects": 3,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/shapenet938/0.jpg",
+        "stimuli/shapenet938/1.jpg",
+        "stimuli/shapenet938/2.jpg"
       ],
       "human_avg_adult": 0.9210526315789472,
-      "rt_avg_adult": 2595.157894736842
+      "rt_avg_adult": 2318.368421052632
+    },
+    {
+      "trial_id": "shapenet1074",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "chair",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/shapenet1074/0.jpg",
+        "stimuli/shapenet1074/1.jpg",
+        "stimuli/shapenet1074/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 2001.8333333333333
+    },
+    {
+      "trial_id": "shapenet142",
+      "tier": "familiar",
+      "dataset": "shapenet",
+      "condition": "bench",
+      "n_objects": 3,
+      "oddity_index": 0,
+      "images": [
+        "stimuli/shapenet142/0.jpg",
+        "stimuli/shapenet142/1.jpg",
+        "stimuli/shapenet142/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 2027.55
+    },
+    {
+      "trial_id": "familiar_low_screen02",
+      "tier": "photos",
+      "dataset": "barense",
+      "condition": "familiar_lowsim",
+      "n_objects": 4,
+      "oddity_index": 1,
+      "images": [
+        "stimuli/familiar_low_screen02/0.jpg",
+        "stimuli/familiar_low_screen02/1.jpg",
+        "stimuli/familiar_low_screen02/2.jpg",
+        "stimuli/familiar_low_screen02/3.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": 1703.1142857142856
     },
     {
       "trial_id": "shapegen1542",

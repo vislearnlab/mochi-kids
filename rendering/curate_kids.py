@@ -36,7 +36,9 @@ WARMUP_CATEGORIES = ["chair", "lamp", "bench"]
 FAMILIAR_CATEGORIES = ["chair", "lamp", "bench", "telephone",
                        "car", "airplane", "sofa", "table"]
 WARMUP_N = 12
-FAMILIAR_PER_CAT = 6   # 8 cats × 6 = 48
+FAMILIAR_PER_CAT = 3   # 8 cats × 3 = 24
+ANIMALS_N = 16         # majaj animals (B&W photos)
+PHOTOS_N = 8           # barense familiar_lowsim (color photos, n=4)
 NOVEL_N = 8            # abstract4 only
 TRAINING_N = 12
 
@@ -185,7 +187,24 @@ def main():
             emit_trial(row, "familiar", str(row["trial"]), manifest)
     print(f"familiar overall mean acc: {sum(fam_total_acc)/len(fam_total_acc):.2f}")
 
-    # 4. Novel: easiest abstract4.
+    # 4. Animals: easiest majaj animals (B&W photos with circular vignette).
+    animals_rows = df[(df["dataset"] == "majaj")
+                      & (df["n_objects"] == 3)
+                      & (df["condition"] == "animals")]
+    animals_picks = take_easiest(animals_rows, ANIMALS_N)
+    print(f"animals (majaj): {len(animals_picks)} (mean acc={animals_picks['human_avg'].mean():.2f})")
+    for _, row in animals_picks.iterrows():
+        emit_trial(row, "animals", str(row["trial"]), manifest)
+
+    # 5. Photos: barense familiar_lowsim (n=4, full-color real-object photos).
+    photos_rows = df[(df["dataset"] == "barense")
+                     & (df["condition"] == "familiar_lowsim")]
+    photos_picks = take_easiest(photos_rows, PHOTOS_N)
+    print(f"photos (barense): {len(photos_picks)} (mean acc={photos_picks['human_avg'].mean():.2f}, n_objects=4)")
+    for _, row in photos_picks.iterrows():
+        emit_trial(row, "photos", str(row["trial"]), manifest)
+
+    # 6. Novel: easiest abstract4.
     novel_rows = df[(df["dataset"] == "shapegen")
                     & (df["n_objects"] == 3)
                     & (df["condition"] == "abstract4")]
@@ -194,15 +213,17 @@ def main():
     for _, row in novel_picks.iterrows():
         emit_trial(row, "novel", str(row["trial"]), manifest)
 
-    # Sort manifest in playback order: training → warmup → familiar (shuffled) → novel (shuffled).
-    by_tier = {"training": [], "warmup": [], "familiar": [], "novel": []}
+    # Sort manifest in playback order:
+    # training → warmup → familiar (shuffled w/ animals + photos) → novel (shuffled).
+    by_tier = {"training": [], "warmup": [], "familiar": [],
+               "animals": [], "photos": [], "novel": []}
     for t in manifest:
         by_tier[t["tier"]].append(t)
     rng = random.Random(42)
-    rng.shuffle(by_tier["familiar"])
+    middle = by_tier["familiar"] + by_tier["animals"] + by_tier["photos"]
+    rng.shuffle(middle)
     rng.shuffle(by_tier["novel"])
-    final = (by_tier["training"] + by_tier["warmup"]
-             + by_tier["familiar"] + by_tier["novel"])
+    final = (by_tier["training"] + by_tier["warmup"] + middle + by_tier["novel"])
 
     out = {"trials": final}
     MANIFEST_PATH.write_text(json.dumps(out, indent=2))

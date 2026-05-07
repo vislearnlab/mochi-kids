@@ -155,7 +155,7 @@ let SCORE = 0;
 // ============ types ============
 interface Trial {
   trial_id: string;
-  tier: 'training' | 'warmup' | 'familiar' | 'novel';
+  tier: 'training' | 'warmup' | 'familiar' | 'animals' | 'photos' | 'novel';
   dataset: string;
   condition: string;
   n_objects: number;

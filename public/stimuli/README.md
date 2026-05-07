@@ -21,17 +21,22 @@ that excluded kid-friendly categories like car/airplane/sofa/table.
 Each manifest entry preserves `human_avg_adult` and `rt_avg_adult` so
 calibration analyses can use them as continuous difficulty signals.
 
-Categories chosen for kid familiarity. Dropped: watercraft, cabinet,
-loudspeaker, display.
+Pulls from all four MOCHI sub-datasets, mixing visual styles for
+engagement: shapenet (gray renders), majaj (B&W photos), barense
+(full-color photos), shapegen (abstract gray renders). Categories
+chosen for kid familiarity; dropped from the original recipe:
+watercraft, cabinet, loudspeaker, display.
 
 ## Tier composition
 
-| tier | n | what | source |
-| --- | --- | --- | --- |
-| training | 12 | same image duplicated × 2 + a different image | synthesized at curate time |
-| warmup | 12 | easiest chair/lamp/bench (mean adult acc=1.0) | shapenet |
-| familiar | 48 | 8 categories × 6 each: chair, lamp, bench, telephone, car, airplane, sofa, table | shapenet |
-| novel | 8 | easiest `abstract4` only | shapegen |
+| tier | n | n_objects | what | source / visual style |
+| --- | --- | --- | --- | --- |
+| training | 12 | 3 | same image duplicated × 2 + a different image | synthesized at curate time, gray render |
+| warmup | 12 | 3 | easiest chair/lamp/bench (mean adult acc=1.0) | shapenet, gray render |
+| familiar | 24 | 3 | 8 categories × 3 each: chair, lamp, bench, telephone, car, airplane, sofa, table | shapenet, gray render |
+| animals | 16 | 3 | easiest dogs/elephants/etc. (mean adult acc=1.0) | majaj, B&W photo with circular vignette |
+| photos | 8 | **4** | full-color real-object photos (mean adult acc≥0.99) | barense `familiar_lowsim` |
+| novel | 8 | 3 | easiest abstract4 (mean adult acc=1.0) | shapegen |
 
 Order in the manifest: training → warmup → familiar (shuffled) →
 novel (shuffled). Reminders interleaved every 10, breaks every 20.
