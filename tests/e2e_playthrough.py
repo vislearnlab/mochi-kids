@@ -47,35 +47,63 @@ async def play_once(page, click_correct=True):
     manifest = await page.evaluate(
         "(async () => (await (await fetch('manifest.json')).json()).trials)()")
 
-    # consent
+    # consent — wait for the age picker before clicking (preload can take a
+    # while with the larger stimulus set).
+    await page.wait_for_selector('button.age-btn[data-age="6"]', timeout=20000)
     await page.click('button.age-btn[data-age="6"]')
     await page.click('#agree-cb')
     await page.click('#consent-go')
     await page.wait_for_timeout(250)
-    # how-to-play
-    await page.click('button.big-btn')
+    # how-to-play (interactive: tap the kitty to enable the "I'm ready!" button)
+    await page.click('#howto-row .demo-card[data-role="cat"]')
+    await page.wait_for_timeout(150)
+    await page.click('#howto-go')
     await page.wait_for_timeout(300)
 
-    for trial in manifest:
-        await page.wait_for_timeout(60)
-        # advance reminder/break screens automatically
-        if not await page.evaluate("!!document.querySelector('.kid-row .kid-card')"):
-            await page.click('button.big-btn')
-            await page.wait_for_timeout(120)
+    # Playback order is no longer manifest order: training → warmup → one of
+    # {familiar, novel} → the other, with catch trials spliced into the test
+    # blocks and a Zorpie intro before each test block. So we read whichever
+    # trial is currently rendered (the row id is `row-<trial_id>`) and look
+    # it up in a manifest dict.
+    manifest_by_id = {t['trial_id']: t for t in manifest}
+    trials_completed = 0
+    total = len(manifest)
+    for _ in range(total + 30):  # buffer for block intros + flicker
+        if trials_completed >= total:
+            break
+        await page.wait_for_timeout(80)
+        has_trial = await page.evaluate(
+            "!!document.querySelector('.kid-row .kid-card')")
+        if not has_trial:
+            # block intro / break / etc. — click any enabled big button.
+            await page.evaluate("""
+              () => {
+                const btn = document.querySelector('button.big-btn:not(:disabled)');
+                if (btn) btn.click();
+              }
+            """)
+            await page.wait_for_timeout(150)
+            continue
 
-        oid = trial['oddity_index']
-        target = oid if click_correct else (oid + 1) % trial['n_objects']
-        await page.evaluate(f"""
-          () => {{
-            const cards = document.querySelectorAll('.kid-row .kid-card');
-            for (const c of cards) {{
-              if (parseInt(c.getAttribute('data-orig'), 10) === {target}) {{
-                c.click(); return;
+        trial_id = await page.evaluate(
+            "document.querySelector('.kid-row').id.replace('row-','')")
+        trial = manifest_by_id.get(trial_id)
+        if trial is None:
+            # Unknown trial id — fall back to clicking position 0 so the test
+            # makes progress instead of hanging.
+            await page.evaluate("document.querySelector('.kid-row .kid-card')?.click()")
+        else:
+            oid = trial['oddity_index']
+            target = oid if click_correct else (oid + 1) % trial['n_objects']
+            await page.evaluate(f"""
+              () => {{
+                const c = document.querySelector(
+                  '.kid-row .kid-card[data-orig="{target}"]');
+                if (c) c.click();
               }}
-            }}
-          }}
-        """)
+            """)
         await page.wait_for_timeout(100)
+        trials_completed += 1
 
     await page.wait_for_timeout(800)
     summary = await page.evaluate("""
@@ -159,12 +187,15 @@ async def run():
             # === Test 3: rapid double-click respected once-only ===
             page = await browser.new_page()
             await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=15000)
-            await page.wait_for_timeout(2000)
+            await page.wait_for_selector('button.age-btn[data-age="6"]', timeout=20000)
             await page.click('button.age-btn[data-age="6"]')
             await page.click('#agree-cb')
             await page.click('#consent-go')
             await page.wait_for_timeout(250)
-            await page.click('button.big-btn')
+            # how-to-play interactive demo
+            await page.click('#howto-row .demo-card[data-role="cat"]')
+            await page.wait_for_timeout(150)
+            await page.click('#howto-go')
             await page.wait_for_timeout(350)
             # Double-click any non-oddity card
             await page.evaluate("""

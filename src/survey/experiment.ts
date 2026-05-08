@@ -41,7 +41,7 @@ const AUDIO_BASE = 'audio';
 const audioCache: Record<string, HTMLAudioElement> = {};
 function loadAudio(name: string): HTMLAudioElement {
   if (audioCache[name]) return audioCache[name];
-  const a = new Audio(`${AUDIO_BASE}/${name}.mp3`);
+  const a = new Audio(`${AUDIO_BASE}/${name}.m4a`);
   a.preload = 'auto';
   audioCache[name] = a;
   return a;
@@ -471,7 +471,7 @@ async function main(): Promise<void> {
       'images/zorpie/zorpie_stars.gif',
       'images/zorpie/zorpie_confused.gif',
     ],
-    audio: ['welcome', 'how_to_play', 'reminder'].map(n => `${AUDIO_BASE}/${n}.mp3`),
+    audio: ['welcome', 'how_to_play', 'reminder'].map(n => `${AUDIO_BASE}/${n}.m4a`),
     message: '<div style="text-align:center"><div class="bell" style="font-size:40px;color:#ff6f61">Loading the game…</div><div style="font-size:22px;color:#555">Get ready to find shapes!</div></div>',
     show_progress_bar: true,
   });
