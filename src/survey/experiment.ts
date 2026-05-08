@@ -176,7 +176,12 @@ interface Trial {
 }
 
 // ============ trial builder ============
-function makeOddityTrial(t: Trial, trialNum: number, totalTrials: number): any {
+function makeOddityTrial(
+  t: Trial,
+  trialNum: number,
+  totalTrials: number,
+  cueAudio: boolean = false,
+): any {
   const order = t.images.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -200,6 +205,9 @@ function makeOddityTrial(t: Trial, trialNum: number, totalTrials: number): any {
     trial_duration: null,
     on_load: function () {
       ac();
+      // Cue audio on the first trial of a tier that has no separate intro
+      // screen (training, warmup) so kids who can't read still get the rule.
+      if (cueAudio) playPrompt('block_intro');
       const hud = document.getElementById('hud'); if (hud) hud.style.display = 'flex';
       const fill = document.getElementById('prog-fill') as HTMLElement;
       const lbl  = document.getElementById('prog-label') as HTMLElement;
@@ -617,8 +625,13 @@ async function main(): Promise<void> {
       const intro = blockIntro(tier);
       if (intro) timeline.push(intro);
     }
-    for (const t of blockTrials) {
-      timeline.push(makeOddityTrial(t, trialIndex, totalTrials));
+    for (let bi = 0; bi < blockTrials.length; bi++) {
+      const t = blockTrials[bi];
+      // Tiers without a separate intro screen (training, warmup) cue the
+      // rule audio on the first trial of the block so non-readers know
+      // when to start listening for instructions.
+      const cueAudio = bi === 0 && (tier === 'training' || tier === 'warmup');
+      timeline.push(makeOddityTrial(t, trialIndex, totalTrials, cueAudio));
       const completed = trialIndex + 1;
       const isLast = completed === totalTrials;
       const isBreak = !isLast && BREAK_EVERY > 0 && completed % BREAK_EVERY === 0;
