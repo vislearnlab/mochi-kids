@@ -175,6 +175,14 @@ interface Trial {
   rt_avg_adult?: number | null;
 }
 
+// HUD shows progress + score during trials only. Other screens (block
+// intros, breaks, reminders, welcome, how-to-play, end) hide it so the
+// fixed progress bar doesn't overlap their text.
+function setHud(visible: boolean): void {
+  const hud = document.getElementById('hud');
+  if (hud) hud.style.display = visible ? 'flex' : 'none';
+}
+
 // ============ trial builder ============
 function makeOddityTrial(
   t: Trial,
@@ -208,7 +216,7 @@ function makeOddityTrial(
       // Cue audio on the first trial of a tier that has no separate intro
       // screen (training, warmup) so kids who can't read still get the rule.
       if (cueAudio) playPrompt('block_intro');
-      const hud = document.getElementById('hud'); if (hud) hud.style.display = 'flex';
+      setHud(true);
       const fill = document.getElementById('prog-fill') as HTMLElement;
       const lbl  = document.getElementById('prog-label') as HTMLElement;
       if (fill) fill.style.width = `${100 * trialNum / totalTrials}%`;
@@ -360,6 +368,7 @@ function blockIntro(tier: string): any {
     button_html: (c: string) =>
       `<button class="big-btn" id="${id}" style="visibility:hidden">${c}</button>`,
     on_load: () => {
+      setHud(false);
       const audio = playPrompt('block_intro');
       const advance = () => document.getElementById(id)?.click();
       audio.addEventListener('ended', advance, { once: true });
@@ -504,6 +513,7 @@ async function main(): Promise<void> {
       `<button class="big-btn" id="welcome-go" style="visibility:hidden">${c}</button>`,
     on_load: () => {
       ac();
+      setHud(false);
       const audio = playPrompt('intro');
       const advance = () => document.getElementById('welcome-go')?.click();
       audio.addEventListener('ended', advance, { once: true });
@@ -537,6 +547,7 @@ async function main(): Promise<void> {
     button_html: (c: string) =>
       `<button class="big-btn" id="howto-go" disabled style="opacity:0.45;cursor:not-allowed">${c}</button>`,
     on_load: () => {
+      setHud(false);
       playPrompt('how_to_play');
       const fb = document.getElementById('howto-feedback')!;
       const go = document.getElementById('howto-go') as HTMLButtonElement | null;
@@ -648,6 +659,7 @@ async function main(): Promise<void> {
             </div>`,
           choices: ["I'm ready!"],
           button_html: (c: string) => `<button class="big-btn">${c}</button>`,
+          on_load: () => setHud(false),
         });
       } else if (isReminderOnly) {
         timeline.push({
@@ -662,7 +674,7 @@ async function main(): Promise<void> {
             </div>`,
           choices: ['Keep going!'],
           button_html: (c: string) => `<button class="big-btn secondary">${c}</button>`,
-          on_load: () => playPrompt('reminder'),
+          on_load: () => { setHud(false); playPrompt('reminder'); },
         });
       }
       trialIndex++;

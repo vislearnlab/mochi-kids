@@ -8,7 +8,13 @@
     --soft-yellow: #F7E293; /* matches vislearnlab museumkiosk */
     --text: #2b2b2b;
   }
-  html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0;
+  html, body { background: var(--bg); color: var(--text); margin: 0;
+               /* Respect iOS safe areas so the notch / status bar doesn't
+                  overlap content. viewport-fit=cover in index.html enables
+                  the env() values. */
+               padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                        env(safe-area-inset-bottom) env(safe-area-inset-left);
+               box-sizing: border-box;
                font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif; }
   .jspsych-display-element { font-size: 28px; }
   .jspsych-content { max-width: 1200px; }
@@ -60,7 +66,11 @@
   .big-btn.warning  { background: var(--soft-yellow); color: #333; }
 
   .hud {
-    position: fixed; top: 14px; left: 14px; right: 14px;
+    position: fixed;
+    /* Sit below the iOS notch / status bar (env() falls back to 0). */
+    top:   calc(14px + env(safe-area-inset-top, 0px));
+    left:  calc(14px + env(safe-area-inset-left, 0px));
+    right: calc(14px + env(safe-area-inset-right, 0px));
     display: flex; gap: 14px; align-items: center;
     pointer-events: none; z-index: 50;
   }
@@ -230,9 +240,10 @@
 
   /* On any small viewport (phone portrait/landscape, small iPad), the fixed
      HUD progress bar runs across the top and overlaps the trial title.
-     Push the prompt below the HUD. Placed last so the cascade wins. */
+     Push the prompt below the HUD + iOS safe-area. Placed last so the
+     cascade wins. */
   @media (max-width: 900px), (max-height: 600px) {
-    .kid-prompt { margin-top: 50px; }
+    .kid-prompt { margin-top: calc(50px + env(safe-area-inset-top, 0px)); }
   }
 
   /* How-to-play compaction for phones — fit Zorpie + title + body + demo +
