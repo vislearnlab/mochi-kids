@@ -48,10 +48,15 @@ function loadAudio(name: string): HTMLAudioElement {
 }
 let lastPrompt: HTMLAudioElement | null = null;
 function playPrompt(name: string): HTMLAudioElement {
-  if (lastPrompt && !lastPrompt.paused) {
+  // Reuse the same cached <audio> element — never clone. iOS Safari only
+  // grants playback permission to elements that received a user gesture
+  // (cached + primed by unlockAudio); a freshly cloned node is treated as
+  // unprimed and play() gets silently blocked. Just rewind and play.
+  const a = loadAudio(name);
+  if (lastPrompt && lastPrompt !== a && !lastPrompt.paused) {
     try { lastPrompt.pause(); lastPrompt.currentTime = 0; } catch (_) {}
   }
-  const a = loadAudio(name).cloneNode(true) as HTMLAudioElement;
+  try { a.currentTime = 0; } catch (_) {}
   a.play().catch(() => {});
   lastPrompt = a;
   return a;
@@ -349,7 +354,7 @@ function blockIntro(tier: string): any {
     on_load: () => {
       const audio = playPrompt('block_intro');
       const advance = () => document.getElementById(id)?.click();
-      audio.addEventListener('ended', advance);
+      audio.addEventListener('ended', advance, { once: true });
       setTimeout(advance, 8000);
     },
     data: { task: 'block_intro', tier },
@@ -493,7 +498,7 @@ async function main(): Promise<void> {
       ac();
       const audio = playPrompt('intro');
       const advance = () => document.getElementById('welcome-go')?.click();
-      audio.addEventListener('ended', advance);
+      audio.addEventListener('ended', advance, { once: true });
       setTimeout(advance, 8000);
     },
     data: { task: 'welcome' },
