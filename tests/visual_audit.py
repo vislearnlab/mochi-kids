@@ -48,6 +48,7 @@ def server(port):
 
 # Viewport presets we care about (CSS pixels, not physical).
 VIEWPORTS = {
+    "desktop_1440":          (1440, 900),
     "ipad_pro_12_landscape": (1366, 1024),
     "ipad_pro_11_landscape": (1194, 834),
     "ipad_pro_12_portrait":  (1024, 1366),

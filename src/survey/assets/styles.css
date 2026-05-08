@@ -28,6 +28,11 @@
        be pinned to the bottom (always reachable) and the stimulus area
        above takes the remaining space. */
     display: flex; flex-direction: column;
+    /* Reserve space at the top for the fixed HUD (progress bar + score)
+       so its content never overlaps the trial title. iOS safe-area gets
+       added via env(). */
+    padding-top: calc(54px + env(safe-area-inset-top, 0px));
+    box-sizing: border-box;
   }
   .jspsych-content-wrapper {
     flex: 1 1 auto; min-height: 0;
@@ -58,7 +63,8 @@
 
   .kid-prompt {
     font-family: "Schoolbell", cursive;
-    font-size: 48px; color: var(--accent); margin: 8px 0 24px; text-align: center;
+    font-size: 48px; color: var(--accent); text-align: center;
+    margin: 8px 0 24px;
   }
   .kid-prompt .sub { display:block; font-size: 22px; color: #555; margin-top: 6px; font-family: inherit;}
 
@@ -277,13 +283,8 @@
     }
   }
 
-  /* On any small viewport (phone portrait/landscape, small iPad), the fixed
-     HUD progress bar runs across the top and overlaps the trial title.
-     Push the prompt below the HUD + iOS safe-area. Placed last so the
-     cascade wins. */
-  @media (max-width: 900px), (max-height: 600px) {
-    .kid-prompt { margin-top: calc(50px + env(safe-area-inset-top, 0px)); }
-  }
+  /* (HUD-clearing margin moved to the base .kid-prompt rule above so it
+     applies on every viewport, including desktop.) */
 
   /* How-to-play compaction for phones — fit Zorpie + title + body + demo +
      feedback + button in one screen without scrolling. */
