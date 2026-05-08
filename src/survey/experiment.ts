@@ -146,7 +146,10 @@ const SAVE_ENABLED: boolean = getURLParam('save', 'true') !== 'false';
 // `?show_download=true` reveals a fallback "Download my data" button (dev mode).
 const SHOW_DOWNLOAD: boolean = getURLParam('show_download', 'false') === 'true';
 
-const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '20') as string, 10);
+// No within-block reminder screens by default — block intros are enough,
+// and the audio prompt plays at each block start so non-readers still get
+// the rule. Pass ?reminder_every=20 to bring back periodic reminders.
+const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '0') as string, 10);
 // Block-intro screens already serve as natural breaks, so default off.
 // Pass ?break_every=20 to re-enable mid-block breaks.
 const BREAK_EVERY    = parseInt(getURLParam('break_every', '0') as string, 10);
@@ -323,23 +326,18 @@ function consentTrial(): any {
 // ============ block intros ============
 // Each non-training block opens with a short Zorpie screen telling the
 // kid what's coming next. Photos block also flags the n=4 layout.
-const BLOCK_INTROS: Record<string, { title: string; emoji: string; body: string; color: string }> = {
-  warmup: {
-    title: "Yay! Let's play! 🎉",
-    emoji: '⭐',
-    body: "Tap the one that's <b>different</b>!<br/>You can do it!",
-    color: '#6ec1e4',
-  },
+// Block intros only fire for the two test blocks (familiar, novel). Warmup
+// flows directly from how-to-play with no extra screen. Each intro plays
+// the reminder audio on load so kids who can't read still hear the rule.
+const BLOCK_INTROS: Record<string, { title: string; emoji: string; color: string }> = {
   familiar: {
-    title: 'Look at these things!',
+    title: 'Look at all these things!',
     emoji: '🪑',
-    body: "You'll see fun stuff — chairs, lamps, cars, and more!<br/>Tap the one that's <b>different</b>!",
     color: '#ff6f61',
   },
   novel: {
     title: 'Silly wiggly shapes! 🌀',
     emoji: '✨',
-    body: "Now you'll see silly wiggly shapes!<br/>Tap the one that's <b>different</b>!",
     color: '#9b59b6',
   },
 };
@@ -351,13 +349,13 @@ function blockIntro(tier: string): any {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align:center; padding: 0 24px;">
-        <img src="images/zorpie/zorpie_happy.gif" class="zorpie med" alt="" />
-        <div class="bell" style="font-size:46px;color:${x.color};margin:6px 0 14px">${x.title}</div>
-        <div style="font-size:64px;margin:8px 0">${x.emoji}</div>
-        <div style="font-size:28px; max-width:760px; margin: 0 auto 12px;">${x.body}</div>
+        <img src="images/zorpie/zorpie_happy.gif" class="zorpie big" alt="" />
+        <div class="bell" style="font-size:48px;color:${x.color};margin:6px 0 14px">${x.title}</div>
+        <div style="font-size:88px;margin:8px 0">${x.emoji}</div>
       </div>`,
     choices: ["Let's go!"],
     button_html: (c: string) => `<button class="big-btn">${c}</button>`,
+    on_load: () => playPrompt('reminder'),
     data: { task: 'block_intro', tier },
   };
 }

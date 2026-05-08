@@ -10,9 +10,9 @@ from gtts import gTTS
 OUT = Path(__file__).resolve().parent.parent / "public" / "audio"
 
 PROMPTS = {
-    "welcome": "Hi! I'm Zorpie. Let's play a shape game together!",
-    "how_to_play": "Two pictures are the same thing. One is different. Find the different one!",
-    "reminder": "Remember! Two are the same thing. One is different. Tap the different one!",
+    "welcome": "Hi friend! I'm Zorpie! Let's play a super fun shape game together!",
+    "how_to_play": "Look! Two pictures are the same. One is different. Tap the one that's different!",
+    "reminder": "You're doing great! Tap the one that's different!",
 }
 
 OUT.mkdir(parents=True, exist_ok=True)
