@@ -167,6 +167,7 @@ interface Trial {
   oddity_index: number;
   images: string[];
   human_avg_adult: number;
+  rt_avg_adult?: number | null;
 }
 
 // ============ trial builder ============
@@ -231,6 +232,7 @@ function makeOddityTrial(t: Trial, trialNum: number, totalTrials: number): any {
             display_order: order,
             correct, rt,
             human_avg_adult: t.human_avg_adult,
+            rt_avg_adult: t.rt_avg_adult ?? null,
             score_after: SCORE,
           });
         }, { once: true });

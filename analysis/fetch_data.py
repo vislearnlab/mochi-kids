@@ -81,6 +81,7 @@ for d in docs:
             "correct": t.get("correct"),
             "rt": t.get("rt"),
             "human_avg_adult": t.get("human_avg_adult"),
+            "rt_avg_adult": t.get("rt_avg_adult"),
             "score_after": t.get("score_after"),
         })
 
@@ -93,7 +94,7 @@ TRIAL_COLS = [
     "participantID", "consent_age", "trial_index", "trial_id", "tier",
     "dataset", "condition", "n_objects", "oddity_index_orig",
     "chosen_orig_index", "chosen_display_pos", "correct", "rt",
-    "human_avg_adult", "score_after",
+    "human_avg_adult", "rt_avg_adult", "score_after",
 ]
 
 # ============ QA: session-level flags for bad-actor filtering ============
