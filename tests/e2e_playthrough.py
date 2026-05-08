@@ -47,18 +47,18 @@ async def play_once(page, click_correct=True):
     manifest = await page.evaluate(
         "(async () => (await (await fetch('manifest.json')).json()).trials)()")
 
-    # 1. welcome screen — auto-advances when intro audio ends, but headless
-    # browsers don't always fire the audio 'ended' event reliably. Click the
-    # button to be sure.
-    await page.wait_for_selector('#welcome-go', timeout=20000)
-    await page.click('#welcome-go')
-    await page.wait_for_timeout(200)
-    # 2. consent — wait for the age picker before clicking.
+    # 1. consent — wait for the age picker before clicking. The consent
+    # tap is what unlocks audio playback for the rest of the session.
     await page.wait_for_selector('button.age-btn[data-age="6"]', timeout=20000)
     await page.click('button.age-btn[data-age="6"]')
     await page.click('#agree-cb')
     await page.click('#consent-go')
     await page.wait_for_timeout(250)
+    # 2. welcome screen — Zorpie + auto-playing intro audio. Button is
+    # hidden so we force-click it via JS to advance.
+    await page.wait_for_selector('#welcome-go', state='attached', timeout=20000)
+    await page.evaluate("document.getElementById('welcome-go')?.click()")
+    await page.wait_for_timeout(200)
     # how-to-play (interactive: tap the kitty to enable the "I'm ready!" button)
     await page.click('#howto-row .demo-card[data-role="cat"]')
     await page.wait_for_timeout(150)
@@ -134,11 +134,10 @@ async def run():
             browser = await p.chromium.launch(headless=True)
 
             # === Test 1: disabled consent button blocks advancing ===
+            # Consent is now the first screen (welcome moved after).
             page = await browser.new_page()
             await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=15000)
-            await page.wait_for_selector('#welcome-go', timeout=20000)
-            await page.click('#welcome-go')
-            await page.wait_for_timeout(200)
+            await page.wait_for_selector('#consent-go', timeout=20000)
             await page.evaluate("() => document.getElementById('consent-go')?.click()")
             await page.wait_for_timeout(300)
             still_consent = await page.evaluate("document.body.innerText.includes('HOW OLD ARE YOU')")
@@ -194,14 +193,15 @@ async def run():
             # === Test 3: rapid double-click respected once-only ===
             page = await browser.new_page()
             await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=15000)
-            await page.wait_for_selector('#welcome-go', timeout=20000)
-            await page.click('#welcome-go')
-            await page.wait_for_timeout(200)
             await page.wait_for_selector('button.age-btn[data-age="6"]', timeout=20000)
             await page.click('button.age-btn[data-age="6"]')
             await page.click('#agree-cb')
             await page.click('#consent-go')
             await page.wait_for_timeout(250)
+            # welcome screen — hidden button, force-click via JS
+            await page.wait_for_selector('#welcome-go', state='attached', timeout=20000)
+            await page.evaluate("document.getElementById('welcome-go')?.click()")
+            await page.wait_for_timeout(200)
             # how-to-play interactive demo
             await page.click('#howto-row .demo-card[data-role="cat"]')
             await page.wait_for_timeout(150)

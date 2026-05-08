@@ -328,36 +328,30 @@ function consentTrial(): any {
 // ============ block intros ============
 // Each non-training block opens with a short Zorpie screen telling the
 // kid what's coming next. Photos block also flags the n=4 layout.
-// Block intros only fire for the two test blocks (familiar, novel). Warmup
-// flows directly from how-to-play with no extra screen. Each intro plays
-// the reminder audio on load so kids who can't read still hear the rule.
-const BLOCK_INTROS: Record<string, { title: string; emoji: string; color: string }> = {
-  familiar: {
-    title: 'Look at all these things!',
-    emoji: '🪑',
-    color: '#ff6f61',
-  },
-  novel: {
-    title: 'Silly wiggly shapes! 🌀',
-    emoji: '✨',
-    color: '#9b59b6',
-  },
-};
-
+// Block intros (only for the two test blocks: familiar, novel). Stripped
+// to one phrase + Zorpie + audio. Audio plays automatically and the screen
+// auto-advances when it ends.
 function blockIntro(tier: string): any {
-  const x = BLOCK_INTROS[tier];
-  if (!x) return null;
+  if (tier !== 'familiar' && tier !== 'novel') return null;
+  const id = `block-go-${tier}`;
   return {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="text-align:center; padding: 0 24px;">
+      <div style="text-align:center; padding: 24px;">
         <img src="images/zorpie/zorpie_happy.gif" class="zorpie big" alt="" />
-        <div class="bell" style="font-size:48px;color:${x.color};margin:6px 0 14px">${x.title}</div>
-        <div style="font-size:88px;margin:8px 0">${x.emoji}</div>
+        <div class="bell" style="font-size:42px;color:#ff6f61;margin:18px 0 0">
+          Tap the picture that's <b>different</b>!
+        </div>
       </div>`,
-    choices: ["Let's go!"],
-    button_html: (c: string) => `<button class="big-btn">${c}</button>`,
-    on_load: () => playPrompt('block_intro'),
+    choices: [' '],
+    button_html: (c: string) =>
+      `<button class="big-btn" id="${id}" style="visibility:hidden">${c}</button>`,
+    on_load: () => {
+      const audio = playPrompt('block_intro');
+      const advance = () => document.getElementById(id)?.click();
+      audio.addEventListener('ended', advance);
+      setTimeout(advance, 8000);
+    },
     data: { task: 'block_intro', tier },
   };
 }
@@ -477,32 +471,33 @@ async function main(): Promise<void> {
     show_progress_bar: true,
   });
 
-  // 1. Welcome screen — Zorpie waves, intro audio plays automatically.
-  // Auto-advances when audio ends so the kid doesn't have to read or click.
+  // 1. Consent + age picker. The LET'S PLAY tap is the user gesture that
+  // unlocks audio playback for the rest of the session — browsers block
+  // audio on freshly loaded pages until the first interaction.
+  timeline.push(consentTrial());
+
+  // 2. Welcome screen — just Zorpie waving. intro.m4a plays automatically
+  // (audio is unlocked by the consent click) and the screen auto-advances
+  // when the audio 'ended' event fires. Fallback: an 8s timeout in case the
+  // event doesn't fire (some browsers eat it on slow loads).
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="text-align:center; padding: 0 24px;">
+      <div style="text-align:center; padding: 40px 24px;">
         <img src="images/zorpie/zorpie_wave.gif" class="zorpie big" alt="Zorpie waves hello" />
-        <div class="bell" style="font-size:64px;color:#ff6f61;margin:14px 0 6px">Hi friend!</div>
-        <div style="font-size:30px;color:#555;margin-top:10px">I'm Zorpie!</div>
       </div>`,
-    choices: ["Let's go!"],
-    button_html: (c: string) => `<button class="big-btn" id="welcome-go">${c}</button>`,
+    choices: [' '],  // hidden — kid waits for audio to finish
+    button_html: (c: string) =>
+      `<button class="big-btn" id="welcome-go" style="visibility:hidden">${c}</button>`,
     on_load: () => {
       ac();
       const audio = playPrompt('intro');
-      // Auto-advance when the intro audio finishes — emit a click on the
-      // existing "Let's go!" button so jsPsych ends the trial cleanly.
-      audio.addEventListener('ended', () => {
-        document.getElementById('welcome-go')?.click();
-      });
+      const advance = () => document.getElementById('welcome-go')?.click();
+      audio.addEventListener('ended', advance);
+      setTimeout(advance, 8000);
     },
     data: { task: 'welcome' },
   });
-
-  // 2. Consent + age picker
-  timeline.push(consentTrial());
 
   // 2. How-to-play (interactive demo — kid taps the kitty to advance)
   timeline.push({
