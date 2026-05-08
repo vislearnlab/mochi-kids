@@ -516,10 +516,10 @@ async function main(): Promise<void> {
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="text-align:center; padding: 0 24px;">
+      <div class="howto-wrap">
         <img src="images/zorpie/zorpie_happy.gif" class="zorpie med" alt="" />
-        <div class="bell" style="font-size:48px;color:#ff6f61;margin:6px 0 14px">Let's play a game!</div>
-        <div style="font-size:30px; max-width:760px; margin: 0 auto 12px;">
+        <div class="bell howto-title">Let's play a game!</div>
+        <div class="howto-body">
           Two pictures are the <b>same</b> 🐶 🐶<br/>
           One is <b>different</b> 🐱<br/>
           Tap the <b>different</b> one!
@@ -529,7 +529,7 @@ async function main(): Promise<void> {
           <div class="demo-card" data-role="dog">🐶</div>
           <div class="demo-card diff" data-role="cat">🐱</div>
         </div>
-        <div id="howto-feedback" style="font-size:26px;color:#666;max-width:640px;margin:8px auto 0;min-height:40px">
+        <div id="howto-feedback" class="howto-feedback">
           ✨ Try it! Tap the kitty 🐱
         </div>
       </div>`,
