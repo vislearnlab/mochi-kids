@@ -8,14 +8,21 @@
     --soft-yellow: #F7E293; /* matches vislearnlab museumkiosk */
     --text: #2b2b2b;
   }
-  html, body { background: var(--bg); color: var(--text); margin: 0;
-               /* Respect iOS safe areas so the notch / status bar doesn't
-                  overlap content. viewport-fit=cover in index.html enables
-                  the env() values. */
-               padding: env(safe-area-inset-top) env(safe-area-inset-right)
-                        env(safe-area-inset-bottom) env(safe-area-inset-left);
-               box-sizing: border-box;
-               font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif; }
+  html, body {
+    background: var(--bg); color: var(--text); margin: 0;
+    /* Lock the viewport — no scrolling on any screen. Content is sized to
+       fit via dvh / flex-fill below. dvh adapts to mobile browser chrome
+       (URL bar collapse) better than vh. */
+    height: 100dvh;
+    overflow: hidden;
+    /* Respect iOS safe areas so the notch / status bar doesn't overlap.
+       viewport-fit=cover in index.html enables env() values. */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+    box-sizing: border-box;
+    font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif;
+  }
+  .jspsych-display-element { height: 100%; overflow: hidden; }
   .jspsych-display-element { font-size: 28px; }
   .jspsych-content { max-width: 1200px; }
 
@@ -186,51 +193,56 @@
 
   /* ===== Very short viewports (phone landscape) ===== */
   @media (max-height: 500px) {
-    .zorpie.big { width: 110px; }
-    .zorpie.med { width: 80px; }
-    .zorpie.sm  { width: 70px; }
-    #consent-wrap { padding: 6px 18px; }
-    #consent-wrap h1 { font-size: 26px; margin: 0 0 2px; }
+    .zorpie.big { width: 90px; }
+    .zorpie.med { width: 70px; }
+    .zorpie.sm  { width: 60px; }
+    #consent-wrap { padding: 4px 18px; }
+    #consent-wrap h1 { font-size: 22px; margin: 0; }
+    #consent-wrap .bell { display: none; }    /* drop "Hi I'm Zorpie!" line */
     #consent-wrap .age-grid {
       grid-template-columns: repeat(10, 1fr);
       gap: 4px; margin: 4px auto; max-width: 100%;
     }
-    #consent-wrap .age-btn { font-size: 18px; padding: 6px 0; }
-    #consent-wrap .agree-row { font-size: 20px; margin: 4px 0; }
-    #consent-wrap .consent-text { max-height: 80px; padding: 8px; font-size: 11px; }
-    .kid-prompt { font-size: 24px; margin: 2px 0 6px; }
-    .kid-prompt .sub { font-size: 14px; }
-    .demo-row { margin: 6px 0; gap: 10px; }
-    .demo-card { width: 60px; height: 60px; font-size: 32px; border-width: 4px; }
-    .big-btn { font-size: 22px; padding: 6px 20px; }
+    #consent-wrap .age-btn { font-size: 16px; padding: 4px 0; }
+    #consent-wrap .agree-row { font-size: 16px; margin: 4px 0; gap: 6px; }
+    #consent-wrap .agree-row input { width: 18px; height: 18px; }
+    #consent-wrap .consent-text { display: none; }   /* drop the parent details */
+    #consent-wrap details.consent-text { display: none; }
+    .kid-prompt { font-size: 22px; margin: 2px 0 4px; }
+    .kid-prompt .sub { font-size: 13px; }
+    .demo-row { margin: 4px 0; gap: 8px; }
+    .demo-card { width: 50px; height: 50px; font-size: 28px; border-width: 3px; }
+    .big-btn { font-size: 20px; padding: 4px 18px; }
+    /* "Pick your age and check the box to continue" hint */
+    #consent-wrap > div > p[style*="font-size:15px"] { display: none; }
   }
 
-  /* ===== Portrait orientation on portable devices: stack cards vertically =====
-     Squeezing 3 cards into a phone-portrait width makes each image tiny.
-     Stacking gives each stimulus 60-vw of width, which is far more readable.
-     Targets phones (portrait) and iPads in portrait (<1100w); desktop
-     portrait monitors keep the horizontal layout.
-     Placed AFTER the max-height rules so the orientation override wins. */
+  /* ===== Portrait orientation: stack cards vertically =====
+     Each card image is sized to a fraction of the viewport height so the
+     full stack of 3 fits within the locked viewport. Numbers below
+     reserve roughly 22vh budget for prompt/HUD/margins; the rest split
+     evenly across 3 cards. Targets phones (portrait) and iPads in
+     portrait; desktop portrait monitors keep horizontal layout. */
   @media (orientation: portrait) and (max-width: 1100px) {
     .kid-row {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
       grid-template-columns: none;
       max-width: 100%;
       padding: 0;
     }
     .kid-card {
-      padding: 8px;
+      padding: 6px;
       border-width: 5px;
       border-radius: 22px;
       width: auto; min-width: 0;
     }
     .kid-card img {
-      width: 60vw; height: 60vw;
-      max-width: 320px;
-      max-height: 24vh;
+      width: min(70vw, 320px);
+      height: min(70vw, 320px);
+      max-height: 22dvh;      /* 3 × 22dvh = 66dvh, ~34dvh for chrome */
       object-fit: contain;
       aspect-ratio: 1;
       background: #fafafa;
