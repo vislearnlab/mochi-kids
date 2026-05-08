@@ -148,6 +148,46 @@
     #consent-wrap .consent-text { font-size: 12px; padding: 12px; }
   }
 
+  /* ===== Short viewports (iPad 11" landscape, iPad mini landscape, etc.) ===== */
+  @media (max-height: 900px) {
+    .jspsych-content { padding-top: 8px; padding-bottom: 8px; }
+    .zorpie.big { width: 180px; }
+    .zorpie.med { width: 130px; }
+    /* Consent screen: tighten spacing */
+    #consent-wrap { padding: 12px 24px; }
+    #consent-wrap h1 { font-size: 38px; margin: 0 0 6px; }
+    #consent-wrap .age-grid { margin: 8px auto; gap: 8px; }
+    #consent-wrap .age-btn { font-size: 26px; padding: 10px 0; }
+    #consent-wrap .agree-row { font-size: 24px; margin: 8px 0; }
+    #consent-wrap .consent-text { max-height: 140px; padding: 12px; }
+    /* How-to-play: smaller demo, tighter rows */
+    .kid-prompt { font-size: 36px; margin: 4px 0 12px; }
+    .demo-row { margin: 10px 0; gap: 14px; }
+    .demo-card { width: 100px; height: 100px; font-size: 56px; }
+    .big-btn { font-size: 30px; padding: 10px 28px; }
+  }
+
+  /* ===== Very short viewports (phone landscape) ===== */
+  @media (max-height: 500px) {
+    .zorpie.big { width: 110px; }
+    .zorpie.med { width: 80px; }
+    .zorpie.sm  { width: 70px; }
+    #consent-wrap { padding: 6px 18px; }
+    #consent-wrap h1 { font-size: 26px; margin: 0 0 2px; }
+    #consent-wrap .age-grid {
+      grid-template-columns: repeat(10, 1fr);
+      gap: 4px; margin: 4px auto; max-width: 100%;
+    }
+    #consent-wrap .age-btn { font-size: 18px; padding: 6px 0; }
+    #consent-wrap .agree-row { font-size: 20px; margin: 4px 0; }
+    #consent-wrap .consent-text { max-height: 80px; padding: 8px; font-size: 11px; }
+    .kid-prompt { font-size: 24px; margin: 2px 0 6px; }
+    .kid-prompt .sub { font-size: 14px; }
+    .demo-row { margin: 6px 0; gap: 10px; }
+    .demo-card { width: 60px; height: 60px; font-size: 32px; border-width: 4px; }
+    .big-btn { font-size: 22px; padding: 6px 20px; }
+  }
+
   /* Avoid the iOS double-tap-zoom delay on tappable elements */
   .kid-card, .age-btn, .big-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   /* On touch devices, hover transforms feel laggy — disable */
