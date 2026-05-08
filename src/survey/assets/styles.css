@@ -188,6 +188,46 @@
     .big-btn { font-size: 22px; padding: 6px 20px; }
   }
 
+  /* ===== Portrait orientation on portable devices: stack cards vertically =====
+     Squeezing 3 cards into a phone-portrait width makes each image tiny.
+     Stacking gives each stimulus 60-vw of width, which is far more readable.
+     Targets phones (portrait) and iPads in portrait (<1100w); desktop
+     portrait monitors keep the horizontal layout.
+     Placed AFTER the max-height rules so the orientation override wins. */
+  @media (orientation: portrait) and (max-width: 1100px) {
+    .kid-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      grid-template-columns: none;
+      max-width: 100%;
+      padding: 0;
+    }
+    .kid-card {
+      padding: 8px;
+      border-width: 5px;
+      border-radius: 22px;
+      width: auto; min-width: 0;
+    }
+    .kid-card img {
+      width: 60vw; height: 60vw;
+      max-width: 320px;
+      max-height: 24vh;
+      object-fit: contain;
+      aspect-ratio: 1;
+      background: #fafafa;
+      border-radius: 14px;
+    }
+  }
+
+  /* On any small viewport (phone portrait/landscape, small iPad), the fixed
+     HUD progress bar runs across the top and overlaps the trial title.
+     Push the prompt below the HUD. Placed last so the cascade wins. */
+  @media (max-width: 900px), (max-height: 600px) {
+    .kid-prompt { margin-top: 50px; }
+  }
+
   /* Avoid the iOS double-tap-zoom delay on tappable elements */
   .kid-card, .age-btn, .big-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   /* On touch devices, hover transforms feel laggy — disable */
