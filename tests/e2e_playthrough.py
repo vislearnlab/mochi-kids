@@ -47,8 +47,13 @@ async def play_once(page, click_correct=True):
     manifest = await page.evaluate(
         "(async () => (await (await fetch('manifest.json')).json()).trials)()")
 
-    # consent — wait for the age picker before clicking (preload can take a
-    # while with the larger stimulus set).
+    # 1. welcome screen — auto-advances when intro audio ends, but headless
+    # browsers don't always fire the audio 'ended' event reliably. Click the
+    # button to be sure.
+    await page.wait_for_selector('#welcome-go', timeout=20000)
+    await page.click('#welcome-go')
+    await page.wait_for_timeout(200)
+    # 2. consent — wait for the age picker before clicking.
     await page.wait_for_selector('button.age-btn[data-age="6"]', timeout=20000)
     await page.click('button.age-btn[data-age="6"]')
     await page.click('#agree-cb')
@@ -131,7 +136,9 @@ async def run():
             # === Test 1: disabled consent button blocks advancing ===
             page = await browser.new_page()
             await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=15000)
-            await page.wait_for_timeout(1800)
+            await page.wait_for_selector('#welcome-go', timeout=20000)
+            await page.click('#welcome-go')
+            await page.wait_for_timeout(200)
             await page.evaluate("() => document.getElementById('consent-go')?.click()")
             await page.wait_for_timeout(300)
             still_consent = await page.evaluate("document.body.innerText.includes('HOW OLD ARE YOU')")
@@ -187,6 +194,9 @@ async def run():
             # === Test 3: rapid double-click respected once-only ===
             page = await browser.new_page()
             await page.goto(f'http://localhost:{port}/?save=false', wait_until='networkidle', timeout=15000)
+            await page.wait_for_selector('#welcome-go', timeout=20000)
+            await page.click('#welcome-go')
+            await page.wait_for_timeout(200)
             await page.wait_for_selector('button.age-btn[data-age="6"]', timeout=20000)
             await page.click('button.age-btn[data-age="6"]')
             await page.click('#agree-cb')

@@ -91,7 +91,7 @@ function unlockAudio(): void {
   if (audioUnlocked) return;
   audioUnlocked = true;
   ac();
-  ['welcome', 'how_to_play', 'reminder'].forEach(name => {
+  ['intro', 'how_to_play', 'block_intro', 'reminder', 'all_done'].forEach(name => {
     try {
       const a = loadAudio(name);
       a.muted = true;
@@ -293,7 +293,7 @@ function consentTrial(): any {
     button_html: (c: string) => `<button class="big-btn" id="consent-go" disabled style="opacity:0.45;cursor:not-allowed">${c}</button>`,
     on_load: function () {
       ac();
-      playPrompt('welcome');
+      // intro audio plays on the prior welcome screen, not here.
       const grid = document.getElementById('age-grid')!;
       const cb = document.getElementById('agree-cb') as HTMLInputElement;
       const refresh = () => {
@@ -357,7 +357,7 @@ function blockIntro(tier: string): any {
       </div>`,
     choices: ["Let's go!"],
     button_html: (c: string) => `<button class="big-btn">${c}</button>`,
-    on_load: () => playPrompt('reminder'),
+    on_load: () => playPrompt('block_intro'),
     data: { task: 'block_intro', tier },
   };
 }
@@ -398,6 +398,7 @@ const jsPsych = initJsPsych({
       </div>`;
 
     setTimeout(playChime, 100); setTimeout(playChime, 400); setTimeout(playChime, 700);
+    setTimeout(() => playPrompt('all_done'), 900);
 
     function showDownloadFallback(reason: string) {
       const status = document.getElementById('save-status');
@@ -471,12 +472,36 @@ async function main(): Promise<void> {
       'images/zorpie/zorpie_stars.gif',
       'images/zorpie/zorpie_confused.gif',
     ],
-    audio: ['welcome', 'how_to_play', 'reminder'].map(n => `${AUDIO_BASE}/${n}.m4a`),
+    audio: ['intro', 'how_to_play', 'block_intro', 'reminder', 'all_done'].map(n => `${AUDIO_BASE}/${n}.m4a`),
     message: '<div style="text-align:center"><div class="bell" style="font-size:40px;color:#ff6f61">Loading the game…</div><div style="font-size:22px;color:#555">Get ready to find shapes!</div></div>',
     show_progress_bar: true,
   });
 
-  // 1. Consent + age picker
+  // 1. Welcome screen — Zorpie waves, intro audio plays automatically.
+  // Auto-advances when audio ends so the kid doesn't have to read or click.
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align:center; padding: 0 24px;">
+        <img src="images/zorpie/zorpie_wave.gif" class="zorpie big" alt="Zorpie waves hello" />
+        <div class="bell" style="font-size:64px;color:#ff6f61;margin:14px 0 6px">Hi friend!</div>
+        <div style="font-size:30px;color:#555;margin-top:10px">I'm Zorpie!</div>
+      </div>`,
+    choices: ["Let's go!"],
+    button_html: (c: string) => `<button class="big-btn" id="welcome-go">${c}</button>`,
+    on_load: () => {
+      ac();
+      const audio = playPrompt('intro');
+      // Auto-advance when the intro audio finishes — emit a click on the
+      // existing "Let's go!" button so jsPsych ends the trial cleanly.
+      audio.addEventListener('ended', () => {
+        document.getElementById('welcome-go')?.click();
+      });
+    },
+    data: { task: 'welcome' },
+  });
+
+  // 2. Consent + age picker
   timeline.push(consentTrial());
 
   // 2. How-to-play (interactive demo — kid taps the kitty to advance)
