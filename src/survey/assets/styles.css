@@ -22,7 +22,34 @@
     box-sizing: border-box;
     font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif;
   }
-  .jspsych-display-element { height: 100%; overflow: hidden; }
+  .jspsych-display-element {
+    height: 100%; overflow: hidden;
+    /* Lay the page out as a flex column so the jspsych button group can
+       be pinned to the bottom (always reachable) and the stimulus area
+       above takes the remaining space. */
+    display: flex; flex-direction: column;
+  }
+  .jspsych-content-wrapper {
+    flex: 1 1 auto; min-height: 0;
+    display: flex; flex-direction: column;
+  }
+  .jspsych-content {
+    flex: 1 1 auto; min-height: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  /* The stimulus container (consent-wrap, howto-wrap, etc.) gets the
+     scroll-fallback so a too-tall stimulus scrolls internally instead
+     of pushing the button below the viewport. */
+  .jspsych-content > div:not(.jspsych-btn-group):first-child {
+    flex: 1 1 auto; min-height: 0;
+    overflow-y: auto;
+    width: 100%;
+  }
+  /* jsPsych v8 uses .jspsych-btn-group for the action button row. Pin it. */
+  .jspsych-btn-group, .jspsych-btn-group-flex {
+    flex: 0 0 auto; padding: 8px 0;
+  }
   .jspsych-display-element { font-size: 28px; }
   .jspsych-content { max-width: 1200px; }
 
