@@ -1199,6 +1199,96 @@
       ],
       "human_avg_adult": 1.0,
       "rt_avg_adult": 2671.0
+    },
+    {
+      "trial_id": "catch_00",
+      "tier": "catch",
+      "dataset": "catch",
+      "condition": "sofa_vs_lamp",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/catch_00/0.jpg",
+        "stimuli/catch_00/1.jpg",
+        "stimuli/catch_00/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": null
+    },
+    {
+      "trial_id": "catch_01",
+      "tier": "catch",
+      "dataset": "catch",
+      "condition": "table_vs_telephone",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/catch_01/0.jpg",
+        "stimuli/catch_01/1.jpg",
+        "stimuli/catch_01/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": null
+    },
+    {
+      "trial_id": "catch_02",
+      "tier": "catch",
+      "dataset": "catch",
+      "condition": "car_vs_chair",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/catch_02/0.jpg",
+        "stimuli/catch_02/1.jpg",
+        "stimuli/catch_02/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": null
+    },
+    {
+      "trial_id": "catch_03",
+      "tier": "catch",
+      "dataset": "catch",
+      "condition": "airplane_vs_lamp",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/catch_03/0.jpg",
+        "stimuli/catch_03/1.jpg",
+        "stimuli/catch_03/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": null
+    },
+    {
+      "trial_id": "catch_04",
+      "tier": "catch",
+      "dataset": "catch",
+      "condition": "telephone_vs_car",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/catch_04/0.jpg",
+        "stimuli/catch_04/1.jpg",
+        "stimuli/catch_04/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": null
+    },
+    {
+      "trial_id": "catch_05",
+      "tier": "catch",
+      "dataset": "catch",
+      "condition": "bench_vs_airplane",
+      "n_objects": 3,
+      "oddity_index": 2,
+      "images": [
+        "stimuli/catch_05/0.jpg",
+        "stimuli/catch_05/1.jpg",
+        "stimuli/catch_05/2.jpg"
+      ],
+      "human_avg_adult": 1.0,
+      "rt_avg_adult": null
     }
   ]
 }

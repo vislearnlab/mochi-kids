@@ -84,8 +84,12 @@
   /* Demo mini-cards (used in tutorial intro) */
   .demo-row { display:flex; gap:18px; justify-content:center; align-items:center; margin: 18px 0;}
   .demo-card { width:120px; height:120px; border:5px solid var(--gold); border-radius:18px; background:white;
-               display:flex; align-items:center; justify-content:center; font-size: 64px;}
-  .demo-card.diff { border-color: var(--good); }
+               display:flex; align-items:center; justify-content:center; font-size: 64px;
+               cursor: pointer; user-select: none; transition: transform 0.15s, border-color 0.15s; position: relative;}
+  .demo-card:hover { transform: translateY(-4px) scale(1.04); }
+  .demo-card.diff { /* role marker only — no green border yet (would spoil the answer) */ }
+  .demo-card.correct { border-color: var(--good); animation: bounce 0.5s ease; }
+  .demo-card.wrong   { border-color: #d9534f; animation: shake 0.4s ease; }
 
   /* Consent screen */
   #consent-wrap { max-width: 900px; margin: 0 auto; padding: 28px 24px; text-align: center; }

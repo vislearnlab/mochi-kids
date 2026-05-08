@@ -157,7 +157,7 @@ let SCORE = 0;
 // ============ types ============
 interface Trial {
   trial_id: string;
-  tier: 'training' | 'warmup' | 'familiar' | 'novel';
+  tier: 'training' | 'warmup' | 'familiar' | 'novel' | 'catch';
   dataset: string;
   condition: string;
   n_objects: number;
@@ -325,21 +325,21 @@ function consentTrial(): any {
 // kid what's coming next. Photos block also flags the n=4 layout.
 const BLOCK_INTROS: Record<string, { title: string; emoji: string; body: string; color: string }> = {
   warmup: {
-    title: "Let's start!",
+    title: "Yay! Let's play! 🎉",
     emoji: '⭐',
-    body: "Find the picture that's <b>different</b> from the others.",
+    body: "Tap the one that's <b>different</b>!<br/>You can do it!",
     color: '#6ec1e4',
   },
   familiar: {
-    title: 'Things you know',
+    title: 'Look at these things!',
     emoji: '🪑',
-    body: "You'll see chairs, lamps, cars, and more.<br/>Find the one that's <b>different</b>!",
+    body: "You'll see fun stuff — chairs, lamps, cars, and more!<br/>Tap the one that's <b>different</b>!",
     color: '#ff6f61',
   },
   novel: {
-    title: 'Funny shapes',
-    emoji: '🌀',
-    body: "Find the funny shape that's <b>different</b>!",
+    title: 'Silly wiggly shapes! 🌀',
+    emoji: '✨',
+    body: "Now you'll see silly wiggly shapes!<br/>Tap the one that's <b>different</b>!",
     color: '#9b59b6',
   },
 };
@@ -479,42 +479,99 @@ async function main(): Promise<void> {
   // 1. Consent + age picker
   timeline.push(consentTrial());
 
-  // 2. How-to-play
+  // 2. How-to-play (interactive demo — kid taps the kitty to advance)
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align:center; padding: 0 24px;">
         <img src="images/zorpie/zorpie_happy.gif" class="zorpie med" alt="" />
-        <div class="bell" style="font-size:46px;color:#ff6f61;margin:6px 0 14px">How to play</div>
-        <div style="font-size:28px; max-width:760px; margin: 0 auto 12px;">
-          Two pictures are the <b>same</b>. One is <b>different</b>.<br/>
-          Find the <b>different</b> one!
+        <div class="bell" style="font-size:48px;color:#ff6f61;margin:6px 0 14px">Let's play a game!</div>
+        <div style="font-size:30px; max-width:760px; margin: 0 auto 12px;">
+          Two pictures are the <b>same</b> 🐶 🐶<br/>
+          One is <b>different</b> 🐱<br/>
+          Tap the <b>different</b> one!
         </div>
-        <div class="demo-row">
-          <div class="demo-card">🐶</div>
-          <div class="demo-card">🐶</div>
-          <div class="demo-card diff">🐱</div>
+        <div class="demo-row" id="howto-row">
+          <div class="demo-card" data-role="dog">🐶</div>
+          <div class="demo-card" data-role="dog">🐶</div>
+          <div class="demo-card diff" data-role="cat">🐱</div>
         </div>
-        <div style="font-size:22px;color:#666;max-width:600px;margin: 0 auto;">
-          Two are the same (🐶 🐶), one is different (🐱) — you'd tap the cat!
+        <div id="howto-feedback" style="font-size:26px;color:#666;max-width:640px;margin:8px auto 0;min-height:40px">
+          ✨ Try it! Tap the kitty 🐱
         </div>
       </div>`,
     choices: ["I'm ready!"],
-    button_html: (c: string) => `<button class="big-btn">${c}</button>`,
-    on_load: () => playPrompt('how_to_play'),
+    button_html: (c: string) =>
+      `<button class="big-btn" id="howto-go" disabled style="opacity:0.45;cursor:not-allowed">${c}</button>`,
+    on_load: () => {
+      playPrompt('how_to_play');
+      const fb = document.getElementById('howto-feedback')!;
+      const go = document.getElementById('howto-go') as HTMLButtonElement | null;
+      let solved = false;
+      document.querySelectorAll('#howto-row .demo-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          const role = (card as HTMLElement).dataset.role;
+          if (role === 'cat') {
+            solved = true;
+            playChime();
+            emitSparkles(card, 18);
+            card.classList.add('correct');
+            fb.innerHTML = `🌟 <b>That's right!</b> You're a Shape Detective! 🌟`;
+            (fb as HTMLElement).style.color = '#3aa53a';
+            if (go) {
+              go.disabled = false;
+              go.style.opacity = '1';
+              go.style.cursor = 'pointer';
+            }
+          } else if (!solved) {
+            card.classList.add('wrong');
+            setTimeout(() => card.classList.remove('wrong'), 400);
+            fb.innerHTML = `Oops! That's a doggy 🐶. Find the one that's <b>different</b>!`;
+            (fb as HTMLElement).style.color = '#993556';
+          }
+        });
+      });
+    },
   });
 
   // 3. Block-by-tier playback. Training and warmup are fixed at the start;
   // familiar and novel each play as one long block, with their order
-  // counterbalanced (50/50 random per session). Each non-training block
-  // opens with a short Zorpie intro.
+  // counterbalanced (50/50 random per session). Catch trials (synthesized
+  // pop-out attention checks) are split evenly across the two test blocks
+  // and spliced in at evenly-spaced positions.
   const byTier: Record<string, Trial[]> = {};
   for (const t of trials) (byTier[t.tier] ||= []).push(t);
+
+  // Shuffle catch trials and split between the two test blocks.
+  const catchTrials = (byTier.catch || []).slice();
+  for (let i = catchTrials.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [catchTrials[i], catchTrials[j]] = [catchTrials[j], catchTrials[i]];
+  }
+  const halfCatch = Math.ceil(catchTrials.length / 2);
+  const catchByTier: Record<string, Trial[]> = {
+    familiar: catchTrials.slice(0, halfCatch),
+    novel:    catchTrials.slice(halfCatch),
+  };
+
+  // Splice catch trials evenly into a test block. With k catch trials in
+  // a block of n base trials, place them at roughly i*(n+k)/(k+1) positions.
+  const spliceCatches = (base: Trial[], catches: Trial[]): Trial[] => {
+    if (!catches.length) return base;
+    const out = base.slice();
+    const total = out.length + catches.length;
+    catches.forEach((c, i) => {
+      const pos = Math.floor((i + 1) * total / (catches.length + 1));
+      out.splice(Math.min(pos, out.length), 0, c);
+    });
+    return out;
+  };
 
   type Block = { tier: string; trials: Trial[] };
   const middle: Block[] = [];
   for (const tier of ['familiar', 'novel']) {
-    if (byTier[tier]?.length) middle.push({ tier, trials: byTier[tier] });
+    if (!byTier[tier]?.length) continue;
+    middle.push({ tier, trials: spliceCatches(byTier[tier], catchByTier[tier] || []) });
   }
   for (let i = middle.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -548,8 +605,8 @@ async function main(): Promise<void> {
           stimulus: `
             <div style="text-align:center;">
               <img src="images/zorpie/zorpie_happy.gif" class="zorpie big" alt="" />
-              <div class="bell" style="font-size:42px;color:#6ec1e4;margin-top:8px">Take a little break!</div>
-              <div style="font-size:22px;color:#666;margin-top:8px">Stretch, wiggle, or take a sip 💧</div>
+              <div class="bell" style="font-size:44px;color:#6ec1e4;margin-top:8px">Wiggle break! 🤸</div>
+              <div style="font-size:24px;color:#666;margin-top:8px">Stretch, wiggle, or take a sip 💧</div>
             </div>`,
           choices: ["I'm ready!"],
           button_html: (c: string) => `<button class="big-btn">${c}</button>`,
@@ -560,9 +617,9 @@ async function main(): Promise<void> {
           stimulus: `
             <div style="text-align:center;">
               <img src="images/zorpie/zorpie_confused.gif" class="zorpie med" alt="" />
-              <div class="bell" style="font-size:36px;color:#993556;margin-top:6px">Remember!</div>
-              <div style="font-size:22px;color:#666;margin-top:6px;max-width:560px;margin-left:auto;margin-right:auto">
-                Two are the same. One is different. Tap the different one!
+              <div class="bell" style="font-size:38px;color:#993556;margin-top:6px">You're doing great! 🌟</div>
+              <div style="font-size:24px;color:#666;margin-top:6px;max-width:560px;margin-left:auto;margin-right:auto">
+                Two are the same. One is different.<br/>Tap the one that's <b>different</b>!
               </div>
             </div>`,
           choices: ['Keep going!'],

@@ -42,6 +42,10 @@ WARMUP_N = 12
 # Novel: mix abstract4/3/2 to add a difficulty ramp instead of all-easy.
 NOVEL_BREAKDOWN = {"abstract4": 12, "abstract3": 8, "abstract2": 8}  # 28 total
 TRAINING_N = 12
+# Catch trials: synthesized identity matches (same image x2 + 1 clearly
+# different category image). Spliced into test blocks at runtime as
+# attention checks — every kid should get them right.
+CATCH_N = 6
 
 JPEG_MAX_DIM = 512
 JPEG_QUALITY = 88
@@ -98,37 +102,22 @@ def emit_trial(row, tier, trial_id, manifest):
     })
 
 
-def synthesize_training(df, n, manifest):
-    """Make pop-out trials from real shapenet images: same image x2 + 1
-    different. Picks easiest, most-distinct cross-category pairs."""
-    # Use very-easy categories with high human_avg as the "two same" stims.
-    # Pair with a clearly-different category as the oddity.
-    pairs = [
-        ("chair", "telephone"), ("lamp", "bench"), ("bench", "telephone"),
-        ("chair", "lamp"), ("airplane", "chair"), ("car", "lamp"),
-        ("telephone", "bench"), ("lamp", "telephone"), ("bench", "chair"),
-        ("airplane", "telephone"), ("car", "bench"), ("chair", "airplane"),
-    ][:n]
+def _synthesize_popouts(df, pairs, tier, id_prefix, manifest):
+    """Shared helper: build pop-out trials from cross-category image pairs.
+    Used for both training tier (start of session) and catch tier (sprinkled
+    through the test blocks as attention checks)."""
 
-    # For each category we'll need one image per appearance — pick from
-    # easiest trials of that category.
     easy_by_cat = {}
     for cat in {c for pair in pairs for c in pair}:
         rows = df[(df["dataset"] == "shapenet") & (df["condition"] == cat)]
         easy_by_cat[cat] = rows.sort_values("human_avg", ascending=False).head(20)
 
-    used_images = set()
     for i, (same_cat, diff_cat) in enumerate(pairs):
-        # Pick one image from same_cat (any image works; pop-out is trivial)
         same_row = easy_by_cat[same_cat].iloc[i % len(easy_by_cat[same_cat])]
         diff_row = easy_by_cat[diff_cat].iloc[i % len(easy_by_cat[diff_cat])]
-        # Take image 0 from each
         same_img = same_row["images"][0]
         diff_img = diff_row["images"][0]
-        # Layout: same_img at positions 0 and 1, diff_img at position 2.
-        # Random shuffle of oddity position done at runtime (in client) so
-        # we can keep this deterministic at curation time.
-        trial_id = f"training_{i:02d}"
+        trial_id = f"{id_prefix}_{i:02d}"
         folder = STIMULI_DIR / trial_id
         folder.mkdir(parents=True, exist_ok=True)
         write_image(same_img, folder / "0.jpg")
@@ -136,8 +125,8 @@ def synthesize_training(df, n, manifest):
         write_image(diff_img, folder / "2.jpg")
         manifest.append({
             "trial_id": trial_id,
-            "tier": "training",
-            "dataset": "training",
+            "tier": tier,
+            "dataset": tier,
             "condition": f"{same_cat}_vs_{diff_cat}",
             "n_objects": 3,
             "oddity_index": 2,
@@ -149,6 +138,27 @@ def synthesize_training(df, n, manifest):
             "human_avg_adult": 1.0,
             "rt_avg_adult": None,
         })
+
+
+def synthesize_training(df, n, manifest):
+    pairs = [
+        ("chair", "telephone"), ("lamp", "bench"), ("bench", "telephone"),
+        ("chair", "lamp"), ("airplane", "chair"), ("car", "lamp"),
+        ("telephone", "bench"), ("lamp", "telephone"), ("bench", "chair"),
+        ("airplane", "telephone"), ("car", "bench"), ("chair", "airplane"),
+    ][:n]
+    _synthesize_popouts(df, pairs, "training", "training", manifest)
+
+
+def synthesize_catch(df, n, manifest):
+    """Identity-match attention checks. Different category pairs from
+    training so the kid hasn't seen the exact same image earlier."""
+    pairs = [
+        ("sofa", "lamp"), ("table", "telephone"), ("car", "chair"),
+        ("airplane", "lamp"), ("telephone", "car"), ("bench", "airplane"),
+        ("lamp", "car"), ("chair", "sofa"),
+    ][:n]
+    _synthesize_popouts(df, pairs, "catch", "catch", manifest)
 
 
 def main():
@@ -168,9 +178,13 @@ def main():
 
     manifest = []
 
-    # 1. Training (synthesized pop-out).
+    # 1. Training (synthesized pop-out at start of session).
     print(f"synthesizing {TRAINING_N} training trials…")
     synthesize_training(df, TRAINING_N, manifest)
+
+    # 1b. Catch trials (synthesized pop-outs spliced into test blocks at runtime).
+    print(f"synthesizing {CATCH_N} catch trials…")
+    synthesize_catch(df, CATCH_N, manifest)
 
     # 2. Warmup: easiest trials from chair/lamp/bench.
     warmup_rows = df[(df["dataset"] == "shapenet")
@@ -217,16 +231,18 @@ def main():
     print(f"novel overall mean acc: {sum(nov_total_acc)/len(nov_total_acc):.2f}")
 
     # Keep each tier as its own block (internal shuffle only). The client
-    # groups by tier at runtime, splits familiar/novel into 2 sub-blocks
-    # each, and randomizes the 4-block post-warmup order.
-    by_tier = {"training": [], "warmup": [], "familiar": [], "novel": []}
+    # groups by tier at runtime, plays training -> warmup -> {familiar,
+    # novel} in counterbalanced order, and splices catch trials throughout
+    # the test phase as attention checks.
+    by_tier = {"training": [], "warmup": [], "familiar": [],
+               "novel": [], "catch": []}
     for t in manifest:
         by_tier[t["tier"]].append(t)
     rng = random.Random(42)
     for k in ["familiar", "novel"]:
         rng.shuffle(by_tier[k])
     final = (by_tier["training"] + by_tier["warmup"]
-             + by_tier["familiar"] + by_tier["novel"])
+             + by_tier["familiar"] + by_tier["novel"] + by_tier["catch"])
 
     out = {"trials": final}
     MANIFEST_PATH.write_text(json.dumps(out, indent=2))

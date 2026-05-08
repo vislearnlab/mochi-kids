@@ -19,7 +19,7 @@ PUBLIC = PROJECT / 'public'
 
 REQUIRED_TRIAL_FIELDS = {'trial_id', 'tier', 'dataset', 'condition',
                          'n_objects', 'oddity_index', 'images', 'human_avg_adult'}
-ALLOWED_TIERS = {'training', 'warmup', 'familiar', 'novel'}
+ALLOWED_TIERS = {'training', 'warmup', 'familiar', 'novel', 'catch'}
 
 errors = []
 

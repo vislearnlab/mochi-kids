@@ -132,12 +132,15 @@ for pid, g in trials_df.groupby("participantID"):
     n_stuck = int((g["rt"] > STUCK_MS).sum())
     train = g[g["tier"] == "training"]
     train_acc = train["correct"].mean() if len(train) else 1.0
+    catches = g[g["tier"] == "catch"]
+    catch_acc = catches["correct"].mean() if len(catches) else 1.0
     overall_acc = g["correct"].mean() if n else 0.0
     run_len = _max_run_length(list(g.sort_values("trial_index")["chosen_display_pos"]))
     flags = {
         "qa_position_spam": max_share > POSITION_SHARE_MAX,
         "qa_mash":          (n / max(n, 1)) and (n_fast / max(n, 1) > MASH_RATE_MAX),
         "qa_pop_out_fail":  train_acc < TRAINING_MIN_ACC,
+        "qa_catch_fail":    catch_acc < TRAINING_MIN_ACC,
         "qa_low_acc":       overall_acc < ACC_MIN,
         "qa_long_run":      run_len > RUN_LEN_MAX,
     }
@@ -148,6 +151,7 @@ for pid, g in trials_df.groupby("participantID"):
         "n_fast_lt_500ms": n_fast,
         "n_stuck_gt_15s": n_stuck,
         "training_acc": round(train_acc, 3),
+        "catch_acc": round(catch_acc, 3),
         "overall_acc": round(overall_acc, 3),
         **{k: bool(v) for k, v in flags.items()},
         "qa_pass": not any(flags.values()),
