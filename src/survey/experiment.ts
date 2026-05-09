@@ -376,7 +376,7 @@ function consentTrial(): any {
 // to one phrase + Zorpie + audio. Audio plays automatically and the screen
 // auto-advances when it ends.
 function blockIntro(tier: string): any {
-  if (tier !== 'familiar' && tier !== 'novel') return null;
+  if (tier !== 'mixed') return null;
   const id = `block-go-${tier}`;
   return {
     type: jsPsychHtmlButtonResponse,
@@ -601,53 +601,28 @@ async function main(): Promise<void> {
     },
   });
 
-  // 3. Block-by-tier playback. Training and warmup are fixed at the start;
-  // familiar and novel each play as one long block, with their order
-  // counterbalanced (50/50 random per session). Catch trials (synthesized
-  // pop-out attention checks) are split evenly across the two test blocks
-  // and spliced in at evenly-spaced positions.
+  // 3. Block-by-tier playback. Training and warmup are fixed at the start.
+  // Familiar + novel + catch trials are then INTERLEAVED in a single
+  // shuffled test block — avoids fatigue × tier confounds where, e.g.,
+  // novel trials all land at the end of the session.
   const byTier: Record<string, Trial[]> = {};
   for (const t of trials) (byTier[t.tier] ||= []).push(t);
 
-  // Shuffle catch trials and split between the two test blocks.
-  const catchTrials = (byTier.catch || []).slice();
-  for (let i = catchTrials.length - 1; i > 0; i--) {
+  const interleaved: Trial[] = [
+    ...(byTier.familiar || []),
+    ...(byTier.novel    || []),
+    ...(byTier.catch    || []),
+  ];
+  for (let i = interleaved.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [catchTrials[i], catchTrials[j]] = [catchTrials[j], catchTrials[i]];
+    [interleaved[i], interleaved[j]] = [interleaved[j], interleaved[i]];
   }
-  const halfCatch = Math.ceil(catchTrials.length / 2);
-  const catchByTier: Record<string, Trial[]> = {
-    familiar: catchTrials.slice(0, halfCatch),
-    novel:    catchTrials.slice(halfCatch),
-  };
-
-  // Splice catch trials evenly into a test block. With k catch trials in
-  // a block of n base trials, place them at roughly i*(n+k)/(k+1) positions.
-  const spliceCatches = (base: Trial[], catches: Trial[]): Trial[] => {
-    if (!catches.length) return base;
-    const out = base.slice();
-    const total = out.length + catches.length;
-    catches.forEach((c, i) => {
-      const pos = Math.floor((i + 1) * total / (catches.length + 1));
-      out.splice(Math.min(pos, out.length), 0, c);
-    });
-    return out;
-  };
 
   type Block = { tier: string; trials: Trial[] };
-  const middle: Block[] = [];
-  for (const tier of ['familiar', 'novel']) {
-    if (!byTier[tier]?.length) continue;
-    middle.push({ tier, trials: spliceCatches(byTier[tier], catchByTier[tier] || []) });
-  }
-  for (let i = middle.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [middle[i], middle[j]] = [middle[j], middle[i]];
-  }
   const blockOrder: Block[] = [
     ...(byTier.training ? [{ tier: 'training', trials: byTier.training }] : []),
     ...(byTier.warmup ? [{ tier: 'warmup', trials: byTier.warmup }] : []),
-    ...middle,
+    ...(interleaved.length ? [{ tier: 'mixed', trials: interleaved }] : []),
   ];
 
   let trialIndex = 0;

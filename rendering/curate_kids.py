@@ -65,6 +65,54 @@ def write_image(img_struct, dest: Path):
     im.save(dest, "JPEG", quality=JPEG_QUALITY, optimize=True)
 
 
+# ============ object-in-frame filter ============
+# A subset of MOCHI renders has the object cropped against the image edge.
+# Kids learn a "tap whichever one's clipped" rule and stop comparing shapes,
+# so we drop any trial whose images have non-white pixels on the border.
+EDGE_THRESHOLD = 240   # >= this on every channel == effectively white
+EDGE_NOISE_TOL = 1     # tolerate up to this many edge pixels darker than threshold
+
+
+def _object_in_frame(img_struct) -> bool:
+    """True if all four image borders are essentially white (object stays
+    inside the frame). Tolerates a tiny amount of JPEG noise."""
+    im = Image.open(io.BytesIO(img_struct["bytes"])).convert("RGB")
+    w, h = im.size
+    px = im.load()
+    bad = 0
+    for x in range(w):
+        for y in (0, h - 1):
+            r, g, b = px[x, y]
+            if min(r, g, b) < EDGE_THRESHOLD:
+                bad += 1
+                if bad > EDGE_NOISE_TOL:
+                    return False
+    for y in range(h):
+        for x in (0, w - 1):
+            r, g, b = px[x, y]
+            if min(r, g, b) < EDGE_THRESHOLD:
+                bad += 1
+                if bad > EDGE_NOISE_TOL:
+                    return False
+    return True
+
+
+def _trial_in_frame(row) -> bool:
+    return all(_object_in_frame(img) for img in row["images"])
+
+
+def filter_in_frame(df_rows):
+    """Filter a DataFrame of trials, dropping any whose images have an
+    object touching the frame edge. Prints how many were dropped."""
+    if len(df_rows) == 0:
+        return df_rows
+    keep_mask = df_rows.apply(_trial_in_frame, axis=1)
+    n_drop = (~keep_mask).sum()
+    if n_drop:
+        print(f"    border filter: dropped {n_drop}/{len(df_rows)} trials with edge-clipped objects")
+    return df_rows[keep_mask]
+
+
 def take_easiest(rows, n):
     """Sort by human_avg desc, RT_avg asc; take top n."""
     return rows.sort_values(["human_avg", "RT_avg"],
@@ -186,10 +234,11 @@ def main():
     print(f"synthesizing {CATCH_N} catch trials…")
     synthesize_catch(df, CATCH_N, manifest)
 
-    # 2. Warmup: easiest trials from chair/lamp/bench.
+    # 2. Warmup: easiest trials from chair/lamp/bench (in-frame only).
     warmup_rows = df[(df["dataset"] == "shapenet")
                      & (df["n_objects"] == 3)
                      & (df["condition"].isin(WARMUP_CATEGORIES))]
+    warmup_rows = filter_in_frame(warmup_rows)
     warmup_picks = take_easiest(warmup_rows, WARMUP_N)
     print(f"warmup: {len(warmup_picks)} picks (mean acc={warmup_picks['human_avg'].mean():.2f})")
     used_trial_ids = set(warmup_picks["trial"].tolist())
@@ -205,6 +254,7 @@ def main():
                       & (df["n_objects"] == 3)
                       & (df["condition"] == cat)
                       & (~df["trial"].isin(used_trial_ids))]
+        cat_rows = filter_in_frame(cat_rows)
         picks = take_easiest(cat_rows, per_cat)
         print(f"  {cat}: {len(picks)}/{per_cat} (mean acc={picks['human_avg'].mean():.2f}, range {picks['human_avg'].min():.2f}-{picks['human_avg'].max():.2f})")
         fam_total_acc.extend(picks["human_avg"].tolist())
@@ -223,6 +273,7 @@ def main():
         rows = df[(df["dataset"] == "shapegen")
                   & (df["n_objects"] == 3)
                   & (df["condition"] == cond)]
+        rows = filter_in_frame(rows)
         picks = take_random(rows, n, novel_rng)
         print(f"  {cond}: {len(picks)} (mean acc={picks['human_avg'].mean():.2f}, range {picks['human_avg'].min():.2f}-{picks['human_avg'].max():.2f})")
         nov_total_acc.extend(picks["human_avg"].tolist())
