@@ -182,6 +182,16 @@ const REMINDER_EVERY = parseInt(getURLParam('reminder_every', '0') as string, 10
 // Pass ?break_every=20 to re-enable mid-block breaks.
 const BREAK_EVERY    = parseInt(getURLParam('break_every', '0') as string, 10);
 
+// Kiosk landing page — Stop button + post-session redirect target.
+const EXIT_URL = getURLParam('exit_url', 'https://stanford-cogsci.org:8880/landing_page.html') as string;
+const END_REDIRECT_MS = parseInt(getURLParam('end_redirect_ms', '8000') as string, 10);
+
+// Wire up the persistent Stop button as soon as the script loads.
+{
+  const btn = document.getElementById('exit-btn') as HTMLButtonElement | null;
+  if (btn) btn.addEventListener('click', () => { window.location.href = EXIT_URL; });
+}
+
 let CONSENT_INFO: { age: string | null; agreed: boolean } = { age: null, agreed: false };
 let SCORE = 0;
 
@@ -426,10 +436,10 @@ const jsPsych = initJsPsych({
         <div style="font-size:28px; color:#444; margin-top: 18px;">
           Great job playing the shape game!
         </div>
-        <div style="font-size:22px; color:#666; margin-top: 18px;">
-          You can close this window now.
-        </div>
         <div id="save-status" style="margin-top:24px; font-size:15px; color:#888;">saving your answers…</div>
+        <div style="margin-top:24px;">
+          <button class="big-btn" id="back-home">Back to home</button>
+        </div>
         <div id="dl-fallback" style="margin-top:18px; display:none;">
           <button class="big-btn warning" id="dl">Download my data</button>
           <div style="font-size:13px;color:#999;margin-top:6px">(in case the server is down)</div>
@@ -438,6 +448,12 @@ const jsPsych = initJsPsych({
 
     setTimeout(playChime, 100); setTimeout(playChime, 400); setTimeout(playChime, 700);
     setTimeout(() => playPrompt('all_done'), 900);
+
+    // Kiosk auto-return after the thank-you screen + audio. Manual button is
+    // also available immediately for impatient operators / kids.
+    const goHome = () => { window.location.href = EXIT_URL; };
+    document.getElementById('back-home')?.addEventListener('click', goHome);
+    if (END_REDIRECT_MS > 0) setTimeout(goHome, END_REDIRECT_MS);
 
     function showDownloadFallback(reason: string) {
       const status = document.getElementById('save-status');
