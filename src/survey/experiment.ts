@@ -107,30 +107,8 @@ function unlockAudio(): void {
   });
 }
 
-// Request fullscreen on first user gesture so the Safari URL bar / system
-// chrome gets out of the way. iOS Safari supports the standard API as of
-// 16.4; older Safari ignores it. For permanent kiosk use, prefer
-// "Add to Home Screen" — apple-mobile-web-app-capable=yes in index.html
-// makes that launch in true standalone (no URL bar at all).
-let fullscreenTried = false;
-function tryFullscreen(): void {
-  if (fullscreenTried) return;
-  fullscreenTried = true;
-  const el = document.documentElement as any;
-  const req: (() => Promise<void>) | undefined =
-    el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen;
-  if (!req) return;
-  try {
-    const p = req.call(el);
-    if (p && (p as Promise<void>).catch) (p as Promise<void>).catch(() => {});
-  } catch (_) { /* user denied or unsupported — silently continue */ }
-}
-
 window.addEventListener('touchstart', unlockAudio, { once: true, passive: true, capture: true });
 window.addEventListener('click',      unlockAudio, { once: true, capture: true });
-// Fullscreen request also needs a user gesture; piggyback on the same one.
-window.addEventListener('touchstart', tryFullscreen, { once: true, passive: true, capture: true });
-window.addEventListener('click',      tryFullscreen, { once: true, capture: true });
 
 // ============ visual rewards ============
 function emitSparkles(card: Element, n = 14): void {
