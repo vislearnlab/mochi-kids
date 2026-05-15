@@ -54,10 +54,11 @@
   /* jsPsych v8 uses .jspsych-btn-group for the action button row. Pin it,
      but leave plenty of breathing room at the bottom so the action button
      ("Let's play!", "I'm ready!", etc.) doesn't sit flush with the iPad's
-     bottom bezel / home-bar area. */
-  .jspsych-btn-group, .jspsych-btn-group-flex {
+     bottom bezel / home-bar area. ~12% of viewport height keeps it well
+     above the Stop icon too. */
+  .jspsych-btn-group, .jspsych-btn-group-flex, .jspsych-btn-group-grid {
     flex: 0 0 auto;
-    padding: 8px 0 calc(48px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 0 calc(12dvh + env(safe-area-inset-bottom, 0px));
   }
   .jspsych-display-element { font-size: 28px; }
   .jspsych-content { max-width: 1200px; }
@@ -285,7 +286,7 @@
     #consent-wrap > div > p[style*="font-size:15px"] { display: none; }
     /* Restore tight bottom padding — 48px would eat half the viewport on
        a 393-tall phone in landscape. */
-    .jspsych-btn-group, .jspsych-btn-group-flex {
+    .jspsych-btn-group, .jspsych-btn-group-flex, .jspsych-btn-group-grid {
       padding: 4px 0 8px;
     }
   }
