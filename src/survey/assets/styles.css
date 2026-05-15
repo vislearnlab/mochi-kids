@@ -51,9 +51,13 @@
     overflow-y: auto;
     width: 100%;
   }
-  /* jsPsych v8 uses .jspsych-btn-group for the action button row. Pin it. */
+  /* jsPsych v8 uses .jspsych-btn-group for the action button row. Pin it,
+     but leave plenty of breathing room at the bottom so the action button
+     ("Let's play!", "I'm ready!", etc.) doesn't sit flush with the iPad's
+     bottom bezel / home-bar area. */
   .jspsych-btn-group, .jspsych-btn-group-flex {
-    flex: 0 0 auto; padding: 8px 0;
+    flex: 0 0 auto;
+    padding: 8px 0 calc(48px + env(safe-area-inset-bottom, 0px));
   }
   .jspsych-display-element { font-size: 28px; }
   .jspsych-content { max-width: 1200px; }
@@ -279,6 +283,11 @@
     .big-btn { font-size: 20px; padding: 4px 18px; }
     /* "Pick your age and check the box to continue" hint */
     #consent-wrap > div > p[style*="font-size:15px"] { display: none; }
+    /* Restore tight bottom padding — 48px would eat half the viewport on
+       a 393-tall phone in landscape. */
+    .jspsych-btn-group, .jspsych-btn-group-flex {
+      padding: 4px 0 8px;
+    }
   }
 
   /* ===== Portrait orientation: stack cards vertically =====
