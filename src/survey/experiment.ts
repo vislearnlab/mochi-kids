@@ -300,18 +300,22 @@ function consentTrial(): any {
         <summary class="bell" style="cursor:pointer;font-size:18px;color:#666">Consent details (for parents/guardians)</summary>
         <p style="margin-top:12px">
           By proceeding, you and your child agree to participate in this research. Your child
-          will be asked to play a short shape-matching game on this tablet/computer. No
-          audio/video recording will occur and no identifying information will be collected.
-          Your child's participation will take approximately 3–8 minutes, depending on their pace.
-          The game data collected here will be used for research purposes by the
-          UCSD Visual Learning Lab. There are no risks or benefits to participating: no
-          identifying information will be collected, so you and your child's identity will
-          remain anonymous. Your child can stop the game at any time or choose not to answer
-          any question without penalty. For more information, email the UCSD lab at
-          <i>vislearnlab@ucsd.edu</i>. If you are not satisfied with how this study is being
-          conducted, or if you have any concerns, complaints, or general questions about the
-          research or your rights as a participant, please contact the UCSD Human Research
-          Protections Program at (858) 246-4777.
+          will be asked to play some games or activities on a tablet, for example drawing
+          pictures of common objects or identifying matching shapes. No audio/video taping
+          will occur and no identifiable information will be collection. Your child's
+          participation will take approximately 30 seconds – 5 minutes, depending on how long
+          they choose to participate. The data collected here will be used for research
+          purposes by the Visual Learning Lab and the Children's Discovery Museum of San Jose,
+          and may be displayed on the Children's Discovery Museum of San Jose's website on a
+          future date. There are no risks or benefits to participating: no identifying
+          information will be collected, so you and your child's identity will remain anonymous.
+          Your child can stop drawing at any time or choose not to answer any question without
+          penalty. For more information, email the Visual Learning lab at
+          <i>vislearnlab@ucsd.edu</i>, or call 650-644-7235. If you are not satisfied with how
+          this study is being conducted, or if you have any concerns, complaints, or general
+          questions about the research or your rights as a participant, please contact the
+          University of California, San Diego Institutional Review Board (IRB) to speak to
+          someone independent of the research team at <i>irb@ucsd.edu</i> or 858-246-4777.
         </p>
       </details>
 
