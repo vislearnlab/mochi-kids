@@ -54,6 +54,7 @@ for d in docs:
     session_rows.append({
         "participantID": pid,
         "study": d.get("study"),
+        "site": d.get("site", "unknown"),
         "consent_age": consent.get("age"),
         "consent_agree": consent.get("agree"),
         "finishedAt": d.get("finishedAt"),
@@ -86,7 +87,7 @@ for d in docs:
         })
 
 SESSION_COLS = [
-    "participantID", "study", "consent_age", "consent_agree", "finishedAt",
+    "participantID", "study", "site", "consent_age", "consent_agree", "finishedAt",
     "n_trials", "n_correct", "mean_rt", "ua",
     "screen_w", "screen_h", "screen_dpr",
 ]

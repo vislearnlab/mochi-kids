@@ -143,6 +143,11 @@ function bumpScore(score: number): void {
 // ============ experiment params ============
 const PARTICIPANT_ID = getURLParam('participantID', null) || ('kid_' + shortId(8));
 const STUDY = getURLParam('study', 'mochi_kids_v1') as string;
+// Collection site — where the data was gathered, so kiosk runs can be
+// separated from lab/online runs at analysis time. E.g. ?site=cdm for the
+// Children's Discovery Museum kiosk, ?site=lab, ?site=prolific. Defaults to
+// 'unknown' when the URL omits it.
+const SITE = getURLParam('site', 'unknown') as string;
 
 // Save endpoint: defaults to a /submit relative to the current URL, which
 // matches the lab nginx-prefix pattern (BASE_PATH/submit). Override with
@@ -400,7 +405,7 @@ const jsPsych = initJsPsych({
     const all = jsPsych.data.get().values();
     const oddity = all.filter((d: any) => d.task === 'mochi_oddity');
     const summary = {
-      participantID: PARTICIPANT_ID, study: STUDY,
+      participantID: PARTICIPANT_ID, study: STUDY, site: SITE,
       consent: CONSENT_INFO,
       finishedAt: new Date().toISOString(),
       n_trials: oddity.length,
