@@ -125,8 +125,47 @@ sess_qa %>%
   knitr::kable(caption = sprintf("Kid sessions (%s)", scope_txt))
 ```
 
-The pure-mash test session is excluded from the kid analyses below; it is a
-button-mash QA run (one position, near-instant taps), not a participant.
+Any pure-mash (position-spam) session is excluded from the analyses below.
+
+## Descriptives — main conditions (tiers)
+
+Attention-filtered, **kid = the unit of analysis** (per-kid accuracy averaged,
+then summarised across kids). SD and range are across kids; `n_trials` is the
+pooled count of valid trials. Purely descriptive — the sample is far too small
+for inference.
+
+```{r desc-table}
+# Keep only the 5 current main tiers; older-build sessions carry retired
+# tiers (animals/photos) that don't map onto TIER_LEVELS -> dropped as NA.
+tier_kid <- ft %>% filter(valid, !is.na(tier)) %>%
+  group_by(participantID, who, tier) %>%
+  summarise(acc = mean(correct), n = n(), .groups = "drop")
+
+tier_kid %>%
+  group_by(tier) %>%
+  summarise(n_kids = n_distinct(participantID), n_trials = sum(n),
+            mean_acc = mean(acc), sd_acc = sd(acc),
+            min_acc = min(acc), max_acc = max(acc), .groups = "drop") %>%
+  left_join(ft %>% filter(valid) %>% group_by(tier) %>%
+              summarise(mean_rt_ms = round(mean(rt)), .groups = "drop"), by = "tier") %>%
+  mutate(across(c(mean_acc, sd_acc, min_acc, max_acc), ~round(., 2))) %>%
+  arrange(tier) %>%
+  knitr::kable(caption = "Accuracy & RT by tier (attention-filtered; kid = unit)")
+```
+
+```{r desc-plot, fig.height=4.8}
+ggplot(tier_kid, aes(tier, acc)) +
+  geom_hline(yintercept = params$chance, linetype = "dotted") +
+  geom_point(aes(color = who, size = n), alpha = 0.85,
+             position = position_jitter(width = 0.12, height = 0)) +
+  stat_summary(fun = mean, geom = "crossbar", width = 0.5, linewidth = 0.4, color = "black") +
+  scale_y_continuous(labels = percent, limits = c(0, 1.05)) +
+  scale_color_manual(values = who_colors, guide = "none") +
+  scale_size(range = c(2, 5), guide = "none") +
+  labs(title = "Accuracy by tier — each dot is one kid",
+       subtitle = sprintf("bar = mean across kids; dotted = chance (%s); dot size = valid n", percent(params$chance, 1)),
+       x = NULL, y = "Accuracy")
+```
 
 ## Engagement over the session (RT per trial)
 
