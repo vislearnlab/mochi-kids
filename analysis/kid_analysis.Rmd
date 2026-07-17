@@ -46,15 +46,23 @@ if (isTRUE(params$refresh)) system2("python3", c(here("analysis", "fetch_data.py
 sessions <- read_csv(here("analysis", "data", "sessions.csv"), show_col_types = FALSE)
 trials   <- read_csv(here("analysis", "data", "trials.csv"),   show_col_types = FALSE)
 
-# Which day are we analyzing? Default: the most recent day with data.
+# Default: ALL kid sessions (ages 3-6) across every day.
+# Set params$focus_date = "YYYY-MM-DD" to restrict to a single day instead.
 sessions <- sessions %>% mutate(day = as.Date(finishedAt))
-focus_day <- if (is.null(params$focus_date)) max(sessions$day, na.rm = TRUE) else as.Date(params$focus_date)
+kid_ages <- c("3", "4", "5", "6")
 
-focus_sessions <- sessions %>% filter(day == focus_day)
+focus_sessions <- sessions %>% filter(as.character(consent_age) %in% kid_ages)
+if (!is.null(params$focus_date)) {
+  focus_sessions <- focus_sessions %>% filter(day == as.Date(params$focus_date))
+}
+focus_sessions <- focus_sessions %>% arrange(day)
 focus_ids <- focus_sessions$participantID
+scope_txt <- if (is.null(params$focus_date))
+  sprintf("all kid sessions (ages 3-6) through %s", as.character(max(focus_sessions$day, na.rm = TRUE))) else
+  sprintf("kid sessions on %s", params$focus_date)
 ```
 
-Analyzing **`r length(focus_ids)`** session(s) from **`r as.character(focus_day)`**.
+Analyzing **`r length(focus_ids)`** kid session(s) — `r scope_txt`.
 
 ```{r flag-engagement}
 # Per-trial attention filter. A trial is "valid" (a real decision) unless it is
@@ -95,8 +103,10 @@ lab_of   <- setNames(sess_qa$label, sess_qa$participantID)
 ft <- ft %>% mutate(who = fct_reorder(lab_of[participantID], as.integer(factor(participantID))))
 
 # Stable color per participant, shared across every plot (color follows the entity).
+# Validated 8-hue CVD-safe categorical palette (recycles if >8 kids).
+CAT8 <- c("#2a78d6","#008300","#e87ba4","#eda100","#1baf7a","#eb6834","#4a3aa7","#e34948")
 who_levels <- levels(ft$who)
-who_colors <- setNames(unname(PAL[c("blue","orange","violet","green")])[seq_along(who_levels)], who_levels)
+who_colors <- setNames(rep(CAT8, length.out = length(who_levels)), who_levels)
 ```
 
 ## Session overview & data-quality verdict
@@ -112,7 +122,7 @@ sess_qa %>%
     n_fast = n_fast_lt_500ms,
     verdict
   ) %>%
-  knitr::kable(caption = sprintf("Sessions on %s", focus_day))
+  knitr::kable(caption = sprintf("Kid sessions (%s)", scope_txt))
 ```
 
 The pure-mash test session is excluded from the kid analyses below; it is a
@@ -125,16 +135,16 @@ The clearest read on a young child: as long as they are deciding, RTs stay up
 `r params$fast_ms` ms line and the same position repeats. Point shape/color =
 whether the answer was correct.
 
-```{r rt-per-trial, fig.height=4.8}
+```{r rt-per-trial, fig.height=9}
 ggplot(filter(ft, participantID %in% kid_ids),
        aes(trial_index, rt)) +
   geom_hline(yintercept = params$fast_ms, linetype = "dashed", color = PAL["grey"]) +
   geom_line(alpha = 0.25, color = PAL["grey"]) +
-  geom_point(aes(color = outcome, shape = outcome), size = 2) +
+  geom_point(aes(color = outcome, shape = outcome), size = 1.6) +
   scale_y_log10(labels = comma) +
   scale_color_manual(values = c(correct = GOOD, incorrect = BAD)) +
   scale_shape_manual(values = c(correct = 16, incorrect = 4)) +
-  facet_wrap(~ who, ncol = 1) +
+  facet_wrap(~ who, ncol = 2) +
   labs(title = "Response time across the session",
        subtitle = sprintf("Dashed line = %d ms 'too fast to be a choice' threshold", params$fast_ms),
        x = "Trial number", y = "RT (ms, log scale)", color = NULL, shape = NULL)
