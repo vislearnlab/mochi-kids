@@ -1,0 +1,225 @@
+---
+title: "MOCHI Kids — new kid data (attention-filtered)"
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M %Z')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: hide
+    self_contained: true
+params:
+  refresh: false          # set TRUE to re-pull from Mongo via fetch_data.py
+  focus_date: null        # "YYYY-MM-DD"; null = most recent day in the data
+  spam_share: 0.95        # sessions choosing one position >= this share are pure mash-tests
+  fast_ms: 400            # RT below this = a tap too fast to be a real decision
+  mash_run: 8             # a run of this many identical positions = mashing
+  chance: 0.3333          # 3-image oddity
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  fig.width = 9, fig.height = 4.6, fig.align = "center",
+  dev = "png", dpi = 150,
+  fig.path = here::here("analysis", "figures", "kid_")
+)
+library(tidyverse)
+library(scales)
+library(here)
+
+# Brand-neutral, CVD-safe palette (from the dataviz reference palette)
+PAL <- c(blue = "#2a78d6", orange = "#eb6834", green = "#008300",
+         violet = "#4a3aa7", grey = "#8a8a86")
+GOOD <- "#0ca30c"; BAD <- "#d03b3b"
+TIER_LEVELS <- c("training", "warmup", "familiar", "novel", "catch")
+
+theme_set(theme_minimal(base_size = 13) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold"),
+        strip.text = element_text(face = "bold")))
+```
+
+```{r load}
+if (isTRUE(params$refresh)) system2("python3", c(here("analysis", "fetch_data.py")))
+
+sessions <- read_csv(here("analysis", "data", "sessions.csv"), show_col_types = FALSE)
+trials   <- read_csv(here("analysis", "data", "trials.csv"),   show_col_types = FALSE)
+
+# Which day are we analyzing? Default: the most recent day with data.
+sessions <- sessions %>% mutate(day = as.Date(finishedAt))
+focus_day <- if (is.null(params$focus_date)) max(sessions$day, na.rm = TRUE) else as.Date(params$focus_date)
+
+focus_sessions <- sessions %>% filter(day == focus_day)
+focus_ids <- focus_sessions$participantID
+```
+
+Analyzing **`r length(focus_ids)`** session(s) from **`r as.character(focus_day)`**.
+
+```{r flag-engagement}
+# Per-trial attention filter. A trial is "valid" (a real decision) unless it is
+# either too fast to be a choice, or part of a run of identical positions
+# (button-mashing the same spot).
+ft <- trials %>%
+  filter(participantID %in% focus_ids) %>%
+  arrange(participantID, trial_index) %>%
+  group_by(participantID) %>%
+  mutate(run_id = cumsum(replace_na(chosen_display_pos != lag(chosen_display_pos), TRUE))) %>%
+  group_by(participantID, run_id) %>%
+  mutate(run_len = n()) %>%
+  ungroup() %>%
+  mutate(
+    fast  = rt < params$fast_ms,
+    mash  = run_len >= params$mash_run,
+    valid = !fast & !mash,
+    tier  = factor(tier, levels = TIER_LEVELS),
+    outcome = if_else(correct, "correct", "incorrect")
+  ) %>%
+  left_join(select(focus_sessions, participantID, consent_age), by = "participantID")
+
+# Session-level roll-up + a data-quality verdict.
+sess_qa <- focus_sessions %>%
+  mutate(
+    pure_mash = max_position_share >= params$spam_share,
+    label = sprintf("%s (age %s)", participantID, consent_age),
+    verdict = case_when(
+      pure_mash                     ~ "EXCLUDE — position spam",
+      overall_acc < params$chance & max_run_length > 20 ~ "PARTIAL — disengaged",
+      TRUE                          ~ "USABLE"
+    )
+  )
+
+# Nice ordered participant labels for plotting (drop the pure-mash test from kid plots)
+kid_ids  <- sess_qa %>% filter(!pure_mash) %>% pull(participantID)
+lab_of   <- setNames(sess_qa$label, sess_qa$participantID)
+ft <- ft %>% mutate(who = fct_reorder(lab_of[participantID], as.integer(factor(participantID))))
+
+# Stable color per participant, shared across every plot (color follows the entity).
+who_levels <- levels(ft$who)
+who_colors <- setNames(unname(PAL[c("blue","orange","violet","green")])[seq_along(who_levels)], who_levels)
+```
+
+## Session overview & data-quality verdict
+
+```{r overview}
+sess_qa %>%
+  transmute(
+    session = participantID, age = consent_age,
+    n_trials, raw_acc = percent(overall_acc, 1),
+    mean_rt_ms = round(mean_rt),
+    pos_bias = percent(max_position_share, 1),
+    longest_run = max_run_length,
+    n_fast = n_fast_lt_500ms,
+    verdict
+  ) %>%
+  knitr::kable(caption = sprintf("Sessions on %s", focus_day))
+```
+
+The pure-mash test session is excluded from the kid analyses below; it is a
+button-mash QA run (one position, near-instant taps), not a participant.
+
+## Engagement over the session (RT per trial)
+
+The clearest read on a young child: as long as they are deciding, RTs stay up
+(seconds). When they check out and tap through, RTs collapse below the
+`r params$fast_ms` ms line and the same position repeats. Point shape/color =
+whether the answer was correct.
+
+```{r rt-per-trial, fig.height=4.8}
+ggplot(filter(ft, participantID %in% kid_ids),
+       aes(trial_index, rt)) +
+  geom_hline(yintercept = params$fast_ms, linetype = "dashed", color = PAL["grey"]) +
+  geom_line(alpha = 0.25, color = PAL["grey"]) +
+  geom_point(aes(color = outcome, shape = outcome), size = 2) +
+  scale_y_log10(labels = comma) +
+  scale_color_manual(values = c(correct = GOOD, incorrect = BAD)) +
+  scale_shape_manual(values = c(correct = 16, incorrect = 4)) +
+  facet_wrap(~ who, ncol = 1) +
+  labs(title = "Response time across the session",
+       subtitle = sprintf("Dashed line = %d ms 'too fast to be a choice' threshold", params$fast_ms),
+       x = "Trial number", y = "RT (ms, log scale)", color = NULL, shape = NULL)
+```
+
+## Rolling accuracy (window = 10 trials)
+
+```{r rolling-acc}
+roll <- function(x, k = 10) {
+  sapply(seq_along(x), function(i) {
+    lo <- max(1, i - k + 1); mean(x[lo:i])
+  })
+}
+ft %>%
+  filter(participantID %in% kid_ids) %>%
+  group_by(who) %>%
+  arrange(trial_index) %>%
+  mutate(racc = roll(as.numeric(correct))) %>%
+  ungroup() %>%
+  ggplot(aes(trial_index, racc, color = who)) +
+  geom_hline(yintercept = params$chance, linetype = "dotted") +
+  annotate("text", x = 3, y = params$chance + 0.03, label = "chance", size = 3, color = PAL["grey"]) +
+  geom_line(linewidth = 1) +
+  scale_y_continuous(labels = percent, limits = c(0, 1)) +
+  scale_color_manual(values = who_colors) +
+  labs(title = "Rolling accuracy", x = "Trial number", y = "Accuracy (10-trial window)",
+       color = NULL) +
+  theme(legend.position = "top")
+```
+
+## Accuracy by tier — raw vs. attention-filtered
+
+Filtering to valid trials strips out mashed responses, so it reflects what the
+child did *while actually playing*. `n` above each bar is the number of valid
+trials remaining in that tier.
+
+```{r tier-acc, fig.height=5}
+raw_tier <- ft %>% filter(participantID %in% kid_ids) %>%
+  group_by(who, tier) %>% summarise(acc = mean(correct), n = n(), .groups = "drop") %>%
+  mutate(set = "raw")
+val_tier <- ft %>% filter(participantID %in% kid_ids, valid) %>%
+  group_by(who, tier) %>% summarise(acc = mean(correct), n = n(), .groups = "drop") %>%
+  mutate(set = "attention-filtered")
+
+bind_rows(raw_tier, val_tier) %>%
+  mutate(set = factor(set, levels = c("raw", "attention-filtered"))) %>%
+  ggplot(aes(tier, acc, fill = set)) +
+  geom_hline(yintercept = params$chance, linetype = "dotted") +
+  geom_col(position = position_dodge(0.8), width = 0.7) +
+  geom_text(aes(label = n), position = position_dodge(0.8), vjust = -0.4, size = 3) +
+  scale_y_continuous(labels = percent, limits = c(0, 1.05)) +
+  scale_fill_manual(values = c(raw = PAL[["grey"]], "attention-filtered" = PAL[["blue"]])) +
+  facet_wrap(~ who) +
+  labs(title = "Accuracy by tier", subtitle = "dotted = chance; number = valid n",
+       x = NULL, y = "Accuracy", fill = NULL) +
+  theme(legend.position = "top", axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+## Position choices (mashing check)
+
+A genuinely engaged child spreads taps across all three positions; a
+disengaged one collapses onto one.
+
+```{r pos-dist}
+ft %>%
+  mutate(pos = factor(chosen_display_pos)) %>%
+  count(who, pos) %>%
+  group_by(who) %>% mutate(share = n / sum(n)) %>% ungroup() %>%
+  ggplot(aes(pos, share, fill = who)) +
+  geom_col(width = 0.7) +
+  geom_hline(yintercept = 1/3, linetype = "dotted") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual(values = who_colors, guide = "none") +
+  facet_wrap(~ who) +
+  labs(title = "Chosen screen position", subtitle = "dotted = even 1/3 split",
+       x = "Position (0 = left, 1 = middle, 2 = right)", y = "Share of trials")
+```
+
+## Takeaways
+
+```{r takeaways, echo=FALSE, results='asis'}
+n_kid <- length(kid_ids)
+n_excl <- sum(sess_qa$pure_mash)
+cat(sprintf("- **%d usable kid session(s)**, **%d excluded** as position-spam QA test(s).\n", n_kid, n_excl))
+cat("- Engagement, not ability, drives the raw scores — watch the RT-per-trial and position plots, not just overall accuracy.\n")
+cat("- The attention filter salvages the engaged portion of a session instead of discarding the whole child.\n")
+cat(sprintf("- Chance is %s; catch trials should sit near ceiling — if engaged kids miss them, inspect the catch stimuli.\n", percent(params$chance, 1)))
+```

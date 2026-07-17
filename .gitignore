@@ -10,6 +10,8 @@ rendering/meshes/
 rendering/rotation_frames/
 analysis/data/
 analysis/sanity_check.html
+analysis/kid_analysis.html
+analysis/figures/
 analysis/*_files/
 rendering/MOCHI/
 package-lock.json
