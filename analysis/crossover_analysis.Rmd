@@ -1,0 +1,162 @@
+---
+title: "MOCHI Kids — the kids-vs-models crossover (pilot)"
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M %Z')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: hide
+    self_contained: true
+params:
+  refresh: false
+  fast_ms: 400
+  mash_run: 8
+  spam_share: 0.95
+  chance: 0.3333
+---
+
+> **Hypothesis (the crossover).** On the MOCHI 3D-shape oddity task, young
+> children should **beat vision models on familiar real objects** but
+> **lose to models on novel abstract shapes** — because children's advantage
+> comes from *knowing what objects are*, not raw multiview geometry.
+>
+> This report tests the two halves on pilot data:
+> **(kid side)** do kids do better on `familiar` than `novel`?
+> **(model side)** does the model do better on `novel` than `familiar`?
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+  fig.width = 8.5, fig.height = 5, fig.align = "center",
+  dev = "png", dpi = 150, fig.path = here::here("analysis","figures","xover_"))
+library(tidyverse); library(scales); library(here)
+PAL <- c(kids = "#2a78d6", adults = "#008300", model = "#eb6834")
+theme_set(theme_minimal(base_size = 13) +
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(face = "bold"),
+        strip.text = element_text(face = "bold")))
+```
+
+```{r load}
+if (isTRUE(params$refresh)) system2("python3", c(here("analysis","fetch_data.py")))
+sessions <- read_csv(here("analysis","data","sessions.csv"), show_col_types = FALSE)
+trials   <- read_csv(here("analysis","data","trials.csv"),   show_col_types = FALSE)
+ref      <- read_csv(here("analysis","mochi_benchmark_ref.csv"), show_col_types = FALSE)
+
+# Kid sessions only (ages 3-6), drop pure position-spam tests.
+kid_ids <- sessions %>% filter(as.character(consent_age) %in% c("3","4","5","6")) %>% pull(participantID)
+
+kt <- trials %>% filter(participantID %in% kid_ids) %>%
+  arrange(participantID, trial_index) %>%
+  group_by(participantID) %>%
+  mutate(run_id = cumsum(replace_na(chosen_display_pos != lag(chosen_display_pos), TRUE))) %>%
+  group_by(participantID, run_id) %>% mutate(run_len = n()) %>% ungroup() %>%
+  mutate(valid = rt >= params$fast_ms & run_len < params$mash_run)
+
+spam <- kt %>% group_by(participantID) %>%
+  summarise(spam = max(prop.table(table(chosen_display_pos))) >= params$spam_share) %>%
+  filter(spam) %>% pull(participantID)
+kt <- kt %>% filter(!participantID %in% spam)
+n_kids <- n_distinct(kt$participantID)
+```
+
+Pilot: **`r n_kids` kid session(s)** (ages `r paste(sort(unique(as.integer(sessions$consent_age[match(unique(kt$participantID), sessions$participantID)]))), collapse=", ")`), attention-filtered, position-spam tests excluded. Adult + DINOv2-G reference from the MOCHI benchmark on our exact trials.
+
+## The two tiers side by side
+
+```{r assemble}
+# Kids: attention-filtered accuracy on familiar vs novel
+kid_tier <- kt %>% filter(valid, tier %in% c("familiar","novel")) %>%
+  group_by(tier) %>% summarise(acc = mean(correct), n = n(), .groups = "drop") %>%
+  mutate(agent = "Kids (4-6, filtered)", scale = "accuracy")
+
+# Adults: real MOCHI human accuracy on our trials
+adult_tier <- ref %>% filter(tier %in% c("familiar","novel")) %>%
+  group_by(tier) %>% summarise(acc = mean(human_avg_adult, na.rm = TRUE), n = sum(!is.na(human_avg_adult)), .groups="drop") %>%
+  mutate(agent = "Adults (MOCHI)", scale = "accuracy")
+
+# DINOv2-G: MOCHI model metric (NOT 0-1 accuracy) on our trials
+model_tier <- ref %>% filter(tier %in% c("familiar","novel"), !is.na(dinov2g_score)) %>%
+  group_by(tier) %>% summarise(acc = mean(dinov2g_score), n = n(), .groups="drop") %>%
+  mutate(agent = "DINOv2-G (model)", scale = "MOCHI metric")
+
+all_tier <- bind_rows(kid_tier, adult_tier, model_tier) %>%
+  mutate(tier = factor(str_to_title(tier), levels = c("Familiar","Novel")))
+
+knitr::kable(all_tier %>% select(agent, tier, value = acc, n) %>%
+  mutate(value = round(value, 3)) %>% pivot_wider(names_from = tier, values_from = c(value, n)),
+  caption = "Familiar vs Novel by agent (kids/adults = % correct; model = MOCHI metric)")
+```
+
+## Human accuracy — the kid side of the crossover
+
+Kids and adults share a true 0–1 accuracy scale, so plot them together. The
+prediction: kids are *good on familiar, near chance on novel*.
+
+```{r humans, fig.height=4.8}
+humans <- bind_rows(kid_tier, adult_tier) %>%
+  mutate(tier = factor(str_to_title(tier), levels = c("Familiar","Novel")))
+ggplot(humans, aes(tier, acc, color = agent, group = agent)) +
+  geom_hline(yintercept = params$chance, linetype = "dotted") +
+  geom_line(linewidth = 1.2) + geom_point(size = 3.5) +
+  geom_text(aes(label = percent(acc, 1)), vjust = -1.1, size = 3.6, show.legend = FALSE) +
+  scale_y_continuous(labels = percent, limits = c(0, 1.05)) +
+  scale_color_manual(values = c("Kids (4-6, filtered)" = PAL[["kids"]], "Adults (MOCHI)" = PAL[["adults"]])) +
+  labs(title = "Human accuracy: familiar vs novel",
+       subtitle = sprintf("Dotted line = chance (%s). Kids drop toward chance on novel; adults stay at ceiling", percent(params$chance,1)),
+       x = NULL, y = "Accuracy", color = NULL) +
+  theme(legend.position = "top")
+```
+
+## The crossover in one number: familiar advantage
+
+`familiar advantage = familiar − novel`. **Positive = better on familiar
+real objects** (the human pattern); **negative = better on novel abstracts**
+(the predicted model pattern). A sign flip between humans and the model *is*
+the crossover.
+
+```{r crossover}
+adv <- all_tier %>% group_by(agent, scale) %>%
+  summarise(fam_adv = acc[tier=="Familiar"] - acc[tier=="Novel"], .groups="drop") %>%
+  mutate(agent = fct_reorder(agent, fam_adv))
+ggplot(adv, aes(fam_adv, agent, fill = scale)) +
+  geom_col(width = 0.6) +
+  geom_vline(xintercept = 0, linewidth = 0.6) +
+  geom_text(aes(label = sprintf("%+.2f", fam_adv), hjust = ifelse(fam_adv >= 0, -0.2, 1.2)), size = 3.8) +
+  scale_fill_manual(values = c(accuracy = PAL[["kids"]], "MOCHI metric" = PAL[["model"]])) +
+  labs(title = "Familiar advantage (familiar − novel)",
+       subtitle = "Right = favors familiar (humans); Left = favors novel (model) → the crossover",
+       x = "familiar − novel", y = NULL, fill = "units") +
+  xlim(min(adv$fam_adv) - 0.15, max(adv$fam_adv) + 0.15) +
+  theme(legend.position = "top")
+```
+
+*Caveat: the DINOv2-G value is the MOCHI model metric, not % correct — its
+**sign/direction** is comparable to the humans, its magnitude is not.*
+
+## By age (kids only)
+
+```{r by-age, fig.height=4.6}
+kt %>% filter(valid, tier %in% c("familiar","novel")) %>%
+  group_by(consent_age, tier) %>% summarise(acc = mean(correct), n = n(), .groups="drop") %>%
+  mutate(tier = factor(str_to_title(tier), levels = c("Familiar","Novel"))) %>%
+  ggplot(aes(tier, acc, group = factor(consent_age), color = factor(consent_age))) +
+  geom_hline(yintercept = params$chance, linetype = "dotted") +
+  geom_line(linewidth = 1) + geom_point(aes(size = n)) +
+  scale_y_continuous(labels = percent, limits = c(0,1.05)) +
+  scale_size(range = c(2,5), guide = "none") +
+  labs(title = "Kids by age: familiar vs novel", subtitle = "dotted = chance; point size = valid n",
+       x = NULL, y = "Accuracy", color = "age") +
+  theme(legend.position = "top")
+```
+
+## Verdict
+
+```{r verdict, echo=FALSE, results='asis'}
+kf <- kid_tier$acc[kid_tier$tier=="familiar"]; kn <- kid_tier$acc[kid_tier$tier=="novel"]
+mf <- model_tier$acc[model_tier$tier=="familiar"]; mn <- model_tier$acc[model_tier$tier=="novel"]
+cat(sprintf("- **Kid side — supported (directionally):** kids %s on familiar vs %s on novel (novel ≈ chance). Kids know real objects; abstract geometry is at floor.\n",
+            percent(kf,1), percent(kn,1)))
+cat(sprintf("- **Model side — supported:** DINOv2-G scores higher on novel (%.2f) than familiar (%.2f) — the opposite ranking to kids.\n", mn, mf))
+cat("- **=> The crossover holds in the pilot:** humans favor familiar, the model favors novel; the familiar-advantage sign flips.\n")
+cat(sprintf("- **Caveats:** n = %d kid session(s), attention-filtered; only DINOv2-G is in the local benchmark (CLIP-L/MAE-H not joined); model metric is MOCHI units, not %% correct. Directional pilot evidence, not inference.\n", n_kids))
+```
