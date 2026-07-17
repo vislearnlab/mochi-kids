@@ -10,7 +10,6 @@ rendering/meshes/
 rendering/rotation_frames/
 analysis/data/
 analysis/*.html
-analysis/figures/
 analysis/*_files/
 rendering/MOCHI/
 package-lock.json
