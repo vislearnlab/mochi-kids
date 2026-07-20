@@ -42,21 +42,27 @@ sessions <- read_csv(here("analysis","data","sessions.csv"), show_col_types = FA
 trials   <- read_csv(here("analysis","data","trials.csv"),   show_col_types = FALSE)
 ref      <- read_csv(here("analysis","mochi_benchmark_ref.csv"), show_col_types = FALSE)
 
-# Kid sessions only (ages 3-6), drop pure position-spam tests.
-kid_ids <- sessions %>% filter(as.character(consent_age) %in% c("3","4","5","6")) %>% pull(participantID)
-
-kt <- trials %>% filter(participantID %in% kid_ids) %>%
+# Attention filter for ALL sessions (any age), drop pure position-spam tests.
+pt <- trials %>%
   arrange(participantID, trial_index) %>%
   group_by(participantID) %>%
   mutate(run_id = cumsum(replace_na(chosen_display_pos != lag(chosen_display_pos), TRUE))) %>%
   group_by(participantID, run_id) %>% mutate(run_len = n()) %>% ungroup() %>%
   mutate(valid = rt >= params$fast_ms & run_len < params$mash_run)
 
-spam <- kt %>% group_by(participantID) %>%
+spam <- pt %>% group_by(participantID) %>%
   summarise(spam = max(prop.table(table(chosen_display_pos))) >= params$spam_share) %>%
   filter(spam) %>% pull(participantID)
-kt <- kt %>% filter(!participantID %in% spam)
+pt <- pt %>% filter(!participantID %in% spam)
+
+# Ordered age groups (numeric ages young->old, then 10+, then adult).
+age_levels <- c("2","3","4","5","6","10+","adult")
+pt <- pt %>% mutate(age_grp = factor(as.character(consent_age), levels = age_levels))
+
+# Kids 3-6 subset used for the pooled crossover summary.
+kt <- pt %>% filter(as.character(consent_age) %in% c("3","4","5","6"))
 n_kids <- n_distinct(kt$participantID)
+n_part <- n_distinct(pt$participantID[pt$valid])
 ```
 
 Pilot: **`r n_kids` kid session(s)** (ages `r paste(sort(unique(as.integer(sessions$consent_age[match(unique(kt$participantID), sessions$participantID)]))), collapse=", ")`), attention-filtered, position-spam tests excluded. Adult + DINOv2-G reference from the MOCHI benchmark on our exact trials.
@@ -87,23 +93,43 @@ knitr::kable(all_tier %>% select(agent, tier, value = acc, n) %>%
   caption = "Familiar vs Novel by agent (kids/adults = % correct; model = MOCHI metric)")
 ```
 
-## Human accuracy — the kid side of the crossover
+## Human accuracy — every participant's familiar → novel slope
 
-Kids and adults share a true 0–1 accuracy scale, so plot them together. The
-prediction: kids are *good on familiar, near chance on novel*.
+One line per **session, all ages** (attention-filtered, position-spam
+excluded) — colored by age. The bold black line is the kids-3-6 mean; the
+dashed green line is the MOCHI adult benchmark (ceiling reference).
 
-```{r humans, fig.height=4.8}
-humans <- bind_rows(kid_tier, adult_tier) %>%
+```{r humans, fig.height=5.6}
+# Per-participant familiar/novel accuracy (all ages).
+indiv <- pt %>% filter(valid, tier %in% c("familiar","novel")) %>%
+  group_by(participantID, age_grp, tier) %>%
+  summarise(acc = mean(correct), n = n(), .groups = "drop") %>%
   mutate(tier = factor(str_to_title(tier), levels = c("Familiar","Novel")))
-ggplot(humans, aes(tier, acc, color = agent, group = agent)) +
+
+# Deterministic horizontal dodge so overlapping session-lines stay legible.
+offs <- indiv %>% distinct(participantID) %>% arrange(participantID) %>%
+  mutate(off = (row_number() - (n() + 1) / 2) / n() * 0.35)
+indiv <- indiv %>% left_join(offs, by = "participantID") %>%
+  mutate(xn = as.integer(tier) + off)
+
+kid_mean  <- kid_tier  %>% mutate(xn = as.integer(factor(str_to_title(tier), levels = c("Familiar","Novel"))))
+adult_ref <- adult_tier %>% mutate(xn = as.integer(factor(str_to_title(tier), levels = c("Familiar","Novel"))))
+
+ggplot(indiv, aes(xn, acc)) +
   geom_hline(yintercept = params$chance, linetype = "dotted") +
-  geom_line(linewidth = 1.2) + geom_point(size = 3.5) +
-  geom_text(aes(label = percent(acc, 1)), vjust = -1.1, size = 3.6, show.legend = FALSE) +
+  geom_line(aes(group = participantID, color = age_grp), alpha = 0.55, linewidth = 0.6) +
+  geom_point(aes(color = age_grp, size = n), alpha = 0.65) +
+  geom_line(data = adult_ref, aes(xn, acc, group = 1), color = PAL[["adults"]],
+            linetype = "dashed", linewidth = 1) +
+  geom_line(data = kid_mean, aes(xn, acc, group = 1), color = "black", linewidth = 1.4) +
+  geom_point(data = kid_mean, aes(xn, acc), color = "black", size = 3) +
+  scale_x_continuous(breaks = c(1, 2), labels = c("Familiar", "Novel"), limits = c(0.55, 2.45)) +
   scale_y_continuous(labels = percent, limits = c(0, 1.05)) +
-  scale_color_manual(values = c("Kids (4-6, filtered)" = PAL[["kids"]], "Adults (MOCHI)" = PAL[["adults"]])) +
-  labs(title = "Human accuracy: familiar vs novel",
-       subtitle = sprintf("Dotted line = chance (%s). Kids drop toward chance on novel; adults stay at ceiling", percent(params$chance,1)),
-       x = NULL, y = "Accuracy", color = NULL) +
+  scale_color_viridis_d(option = "viridis", end = 0.92) +
+  scale_size(range = c(1.5, 4.5), guide = "none") +
+  labs(title = "Each participant's familiar → novel slope",
+       subtitle = sprintf("one line per session (all ages, n=%d); dotted = chance (%s)", n_distinct(indiv$participantID), percent(params$chance, 1)),
+       x = NULL, y = "Accuracy", color = "age") +
   theme(legend.position = "top")
 ```
 
