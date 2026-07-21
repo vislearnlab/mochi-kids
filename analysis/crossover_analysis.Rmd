@@ -59,6 +59,9 @@ pt <- pt %>% filter(!participantID %in% spam)
 age_levels <- c("2","3","4","5","6","10+","adult")
 pt <- pt %>% mutate(age_grp = factor(as.character(consent_age), levels = age_levels))
 
+# One fixed viridis map for age everywhere: purple = youngest -> yellow = oldest.
+AGE_COLS <- setNames(scales::viridis_pal(option = "viridis", end = 0.92)(length(age_levels)), age_levels)
+
 # Kids 3-6 subset used for the pooled crossover summary.
 kt <- pt %>% filter(as.character(consent_age) %in% c("3","4","5","6"))
 n_kids <- n_distinct(kt$participantID)
@@ -125,7 +128,7 @@ ggplot(indiv, aes(xn, acc)) +
   geom_point(data = kid_mean, aes(xn, acc), color = "black", size = 3) +
   scale_x_continuous(breaks = c(1, 2), labels = c("Familiar", "Novel"), limits = c(0.55, 2.45)) +
   scale_y_continuous(labels = percent, limits = c(0, 1.05)) +
-  scale_color_viridis_d(option = "viridis", end = 0.92) +
+  scale_color_manual(values = AGE_COLS, drop = FALSE) +
   scale_size(range = c(1.5, 4.5), guide = "none") +
   labs(title = "Each participant's familiar → novel slope",
        subtitle = sprintf("one line per session (all ages, n=%d); dotted = chance (%s)", n_distinct(indiv$participantID), percent(params$chance, 1)),
@@ -164,11 +167,13 @@ ggplot(adv, aes(fam_adv, agent, fill = scale)) +
 ```{r by-age, fig.height=4.6}
 kt %>% filter(valid, tier %in% c("familiar","novel")) %>%
   group_by(consent_age, tier) %>% summarise(acc = mean(correct), n = n(), .groups="drop") %>%
-  mutate(tier = factor(str_to_title(tier), levels = c("Familiar","Novel"))) %>%
-  ggplot(aes(tier, acc, group = factor(consent_age), color = factor(consent_age))) +
+  mutate(tier = factor(str_to_title(tier), levels = c("Familiar","Novel")),
+         age_grp = factor(as.character(consent_age), levels = age_levels)) %>%
+  ggplot(aes(tier, acc, group = age_grp, color = age_grp)) +
   geom_hline(yintercept = params$chance, linetype = "dotted") +
   geom_line(linewidth = 1) + geom_point(aes(size = n)) +
   scale_y_continuous(labels = percent, limits = c(0,1.05)) +
+  scale_color_manual(values = AGE_COLS, drop = TRUE) +
   scale_size(range = c(2,5), guide = "none") +
   labs(title = "Kids by age: familiar vs novel", subtitle = "dotted = chance; point size = valid n",
        x = NULL, y = "Accuracy", color = "age") +
